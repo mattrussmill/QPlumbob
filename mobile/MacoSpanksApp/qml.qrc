@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>TitleBar.qml</file>
+        <file>ListControlBar.qml</file>
+        <file>DeviceList.qml</file>
+        <file>DeviceListModel.qml</file>
+    </qresource>
+</RCC>
