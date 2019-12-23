@@ -6,17 +6,7 @@ Item {
     ListView {
         anchors.fill: parent
         model: DeviceListModel {}
-        delegate: Rectangle {
-            height: listdata.implicitHeight
-            width: parent.width
-            color: 'red'
-            Text {
-                id: listdata
-                anchors.centerIn: parent
-                anchors.fill: parent
-                text: name + ' : ' + number
-            }
-        }
+        delegate: DeviceListDelegate {}
     }
 
     ListControlBar {

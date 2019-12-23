@@ -11,17 +11,29 @@ ApplicationWindow {
 
     StackView {
         id: stack
-        initialItem: deviceList
+        initialItem: deviceListComponent
         anchors.fill: parent
 
-        DeviceList{
-            id: deviceList
+        Component {
+            id: deviceListComponent
+
+            DeviceList {
+                id: deviceList
+                anchors.fill: parent
+            }
         }
 
+        Component {
+            id: selectedGarmentComponent
 
-//        Component {
-//            id: connectedDevice
+            GarmentMenu {
+                id: selectedGarment
+                anchors.fill: parent
+            }
+        }
 
-//        }
+        Component.onCompleted: {
+            stack.push(selectedGarmentComponent, {'anchors.fill': 'parent'})
+        }
     }
 }
