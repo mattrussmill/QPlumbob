@@ -3,12 +3,19 @@ import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 
 ToolBar {
+    id: root
+
+    signal backButtonClicked()
+    signal menuButtonClicked()
 
     RowLayout {
         anchors.fill: parent
 
         ToolButton {
             text: qsTr('‹')
+            onClicked: {
+                root.backButtonClicked()
+            }
         }
 
         Label {
@@ -21,6 +28,10 @@ ToolBar {
 
         ToolButton {
             text: qsTr('⋮')
+            onClicked: {
+                console.log('menu clicked')
+                root.menuButtonClicked()
+            }
         }
     }
 }

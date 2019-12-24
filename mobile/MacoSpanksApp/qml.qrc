@@ -4,10 +4,10 @@
         <file>TitleBar.qml</file>
         <file>ListControlBar.qml</file>
         <file>DeviceList.qml</file>
-        <file>DeviceListModel.qml</file>
         <file>DeviceListDelegate.qml</file>
         <file>GarmentMenu.qml</file>
         <file>GarmentFront.qml</file>
         <file>GarmentRear.qml</file>
+        <file>RegionSlider.qml</file>
     </qresource>
 </RCC>

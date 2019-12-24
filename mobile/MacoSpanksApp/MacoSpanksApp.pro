@@ -1,4 +1,4 @@
-QT += quick quickcontrols2
+QT += bluetooth quick quickcontrols2
 
 CONFIG += c++11
 

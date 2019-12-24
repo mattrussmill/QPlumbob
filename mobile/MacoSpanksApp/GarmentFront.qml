@@ -26,23 +26,16 @@ Item {
         //create Item for Sliders, also need a status - maybe other side from slider 'success / failed & reset'
         //these will be responsible with communicating with the layer that communicates with the device via properties
         //propogated through
-        Label {
-            text: 'Upper'
-            horizontalAlignment: Qt.AlignLeft
+        RegionSlider {
+            Layout.fillWidth: true
+
         }
 
-        Slider {
+
+        RegionSlider {
             Layout.fillWidth: true
         }
 
-        Label {
-            text: 'Lower'
-            horizontalAlignment: Qt.AlignLeft
-        }
-
-        Slider {
-            Layout.fillWidth: true
-        }
 
     }
 }

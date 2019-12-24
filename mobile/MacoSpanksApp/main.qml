@@ -5,8 +5,13 @@ ApplicationWindow {
     visible: true
     title: qsTr('MacoSpanks')
 
+
     header: TitleBar {
-        // signals .. slots ..
+        id: titleBar
+        Component.onCompleted: {
+            backButtonClicked.connect(stack.pop)
+            menuButtonClicked.connect(() => stack.push(selectedGarmentComponent))
+        }
     }
 
     StackView {
@@ -19,7 +24,6 @@ ApplicationWindow {
 
             DeviceList {
                 id: deviceList
-                anchors.fill: parent
             }
         }
 
@@ -28,12 +32,7 @@ ApplicationWindow {
 
             GarmentMenu {
                 id: selectedGarment
-                anchors.fill: parent
             }
-        }
-
-        Component.onCompleted: {
-            stack.push(selectedGarmentComponent, {'anchors.fill': 'parent'})
         }
     }
 }
