@@ -7,6 +7,7 @@ Item {
     id: root
     property int scanDuration: 3500
 
+    //slated for removal
     BluetoothDiscoveryModel {
         id: btModel
         running: false
@@ -38,7 +39,7 @@ Item {
         anchors.fill: parent
         model: btModel
         visible: !btModel.running && count > 1
-        delegate: Rectangle {
+        delegate: Rectangle { //move delegate to ListDelegate
             id: btDelegate
             width: parent.width
             height: column.height + 10
