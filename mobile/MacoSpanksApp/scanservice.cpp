@@ -1,3 +1,4 @@
+#include <QString>
 #include "scanservice.h"
 #include "device.h"
 
@@ -17,6 +18,54 @@ ScanService::~ScanService()
 {
     qDeleteAll(m_devices);
     m_devices.clear();
+}
+
+QVariant ScanService::devices()
+{
+    return QVariant::fromValue(m_devices);
+}
+
+bool ScanService::scanning() const
+{
+    return m_deviceDiscoveryAgent->isActive();
+}
+
+void ScanService::addDevice(const QBluetoothDeviceInfo &device)
+{
+    // If device is LowEnergy-device, add it to the list
+    if (device.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
+        m_devices.append(new Device(device));
+        setInfo(tr("Low Energy device " + device.name().toLatin1() + " found."));
+        emit devicesChanged();
+    }
+}
+
+void ScanService::startSearch()
+{
+    clearMessages();
+    qDeleteAll(m_devices);
+    m_devices.clear();
+
+    emit devicesChanged();
+
+    //@TODO
+
+}
+
+void ScanService::stopSearch()
+{
+    //@TODO
+
+}
+
+void ScanService::scanFinished()
+{
+    if (m_devices.isEmpty())
+        setError(tr("No devices found."));
+    else
+        setInfo(tr("Scanning done."));
+
+    emit scanningChanged();
 }
 
 void ScanService::scanError(QBluetoothDeviceDiscoveryAgent::Error error)
@@ -52,6 +101,4 @@ void ScanService::scanError(QBluetoothDeviceDiscoveryAgent::Error error)
             setError(tr("An unknown error has occurred."));
         }
     }
-
-
 }

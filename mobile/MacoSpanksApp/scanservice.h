@@ -20,7 +20,6 @@ public:
     bool scanning() const;
     int getTimeout();
     void setTimeout(int timeout);
-    void clearDevices(); //Q_INVOKABLE?
     QVariant devices(); //automatically converted to JS list
 
 public slots:
