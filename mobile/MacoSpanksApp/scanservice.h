@@ -11,20 +11,20 @@ class ScanService : public BluetoothBase
 {
     Q_OBJECT
     Q_PROPERTY(bool scanning READ scanning NOTIFY scanningChanged)
-    Q_PROPERTY(int timeout READ getTimeout WRITE setTimeout)
-    Q_PROPERTY(QVariant devices READ devices NOTIFY devicesChanged RESET clearDevices)
+    Q_PROPERTY(int timeout READ timeout WRITE setTimeout)
+    Q_PROPERTY(QVariant devices READ devices NOTIFY devicesChanged)
 
 public:
     explicit ScanService(QObject *parent = nullptr);
     ~ScanService();
     bool scanning() const;
-    int getTimeout();
+    int timeout() const;
     void setTimeout(int timeout);
     QVariant devices(); //automatically converted to JS list
 
 public slots:
-    void startSearch();
-    void stopSearch();
+    void startScan();
+    void stopScan();
 
 signals:
     void scanningChanged();

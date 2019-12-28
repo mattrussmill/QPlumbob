@@ -32,30 +32,29 @@ bool ScanService::scanning() const
 
 void ScanService::addDevice(const QBluetoothDeviceInfo &device)
 {
-    // If device is LowEnergy-device, add it to the list
-    if (device.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
+    // If device is LowEnergy-device, add it to the list @TODO -> ENABLE LOW ENERGY CONFIG
+    //if (device.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
         m_devices.append(new Device(device));
         setInfo(tr("Low Energy device " + device.name().toLatin1() + " found."));
         emit devicesChanged();
-    }
+    //}
 }
 
-void ScanService::startSearch()
+void ScanService::startScan()
 {
     clearMessages();
     qDeleteAll(m_devices);
     m_devices.clear();
-
     emit devicesChanged();
 
-    //@TODO
-
+    m_deviceDiscoveryAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
+    emit scanningChanged();
+    setInfo(tr("Scanning for devices..."));
 }
 
-void ScanService::stopSearch()
+void ScanService::stopScan()
 {
-    //@TODO
-
+    m_deviceDiscoveryAgent->stop();
 }
 
 void ScanService::scanFinished()
@@ -66,6 +65,23 @@ void ScanService::scanFinished()
         setInfo(tr("Scanning done."));
 
     emit scanningChanged();
+}
+
+int ScanService::timeout() const
+{
+   return m_timeout;
+}
+
+void ScanService::setTimeout(int timeout)
+{
+    if(timeout < 0)
+    {
+        setError(tr("Invalid scan timeout set: " + QString::number(timeout).toLatin1() + "ms"));
+        return;
+    }
+
+    m_timeout = timeout;
+    setInfo(tr("Scan timeout set to " + QString::number(timeout).toLatin1() + "ms"));
 }
 
 void ScanService::scanError(QBluetoothDeviceDiscoveryAgent::Error error)
