@@ -7,12 +7,14 @@ Item {
         currentIndex: 0
         anchors.fill: parent
 
-        GarmentFront {
+        Garment {
             id: front
+            regionName: 'front'
         }
 
-        GarmentRear {
+        Garment {
             id: rear
+            regionName: 'rear'
         }
 
     }

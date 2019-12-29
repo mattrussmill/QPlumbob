@@ -32,16 +32,18 @@ bool ScanService::scanning() const
 
 void ScanService::addDevice(const QBluetoothDeviceInfo &device)
 {
-    // If device is LowEnergy-device, add it to the list @TODO -> ENABLE LOW ENERGY CONFIG
-    //if (device.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
+    if (device.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
         m_devices.append(new Device(device));
         setInfo(tr("Low Energy device " + device.name().toLatin1() + " found."));
         emit devicesChanged();
-    //}
+    }
 }
 
 void ScanService::startScan()
 {
+    if(m_deviceDiscoveryAgent->isActive())
+        m_deviceDiscoveryAgent->stop();
+
     clearMessages();
     qDeleteAll(m_devices);
     m_devices.clear();

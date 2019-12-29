@@ -6,8 +6,7 @@
         <file>DeviceList.qml</file>
         <file>DeviceListDelegate.qml</file>
         <file>GarmentMenu.qml</file>
-        <file>GarmentFront.qml</file>
-        <file>GarmentRear.qml</file>
+        <file>Garment.qml</file>
         <file>RegionSlider.qml</file>
     </qresource>
 </RCC>

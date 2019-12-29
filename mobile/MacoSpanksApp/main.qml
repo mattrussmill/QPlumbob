@@ -10,7 +10,6 @@ ApplicationWindow {
         id: titleBar
         Component.onCompleted: {
             backButtonClicked.connect(stack.pop)
-            menuButtonClicked.connect(() => stack.push(selectedGarmentComponent))
         }
     }
 
@@ -24,6 +23,10 @@ ApplicationWindow {
 
             DeviceList {
                 id: deviceList
+
+                Component.onCompleted: {
+                    deviceConnected.connect(() => stack.push(selectedGarmentComponent))
+                }
             }
         }
 

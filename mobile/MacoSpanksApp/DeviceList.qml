@@ -6,14 +6,16 @@ import QtBluetooth 5.12
 Item {
     id: root
 
+    signal deviceConnected() // will pass device info?
+
     ListView {
         id: list
         anchors.fill: parent
         model: scanService.devices
         visible: count > 0
         delegate: DeviceListDelegate {
-            deviceName: name
-            deviceAddress: address
+            deviceName: modelData.name
+            deviceAddress: modelData.address
             delegateIndex: index
         }
     }
@@ -41,6 +43,8 @@ Item {
 
         Component.onCompleted: {
             scanClicked.connect(scanService.startScan)
+            connectClicked.connect(scanService.stopScan)
+            connectClicked.connect(deviceConnected) //@TODO temporary
             scanService.startScan()
         }
     }

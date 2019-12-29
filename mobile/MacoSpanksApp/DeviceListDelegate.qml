@@ -4,8 +4,8 @@ import QtQuick.Controls 2.12
 Item {
     id: root
     width: parent.width
-    height: column.height + 10
-    clip: true
+    height: column.implicitHeight
+    //clip: true
     property string deviceName
     property string deviceAddress
     property bool expended: false
@@ -16,7 +16,7 @@ Item {
         anchors.fill: parent
         Label {
             id: name
-            text: deviceName ? deviceName : delegateIndex + qsTr(' Name Unavailable')
+            text: deviceName ? deviceName : qsTr(' Device Name Unknown: ') + delegateIndex
             font.pointSize: 16
         }
 
