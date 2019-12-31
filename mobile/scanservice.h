@@ -36,7 +36,7 @@ private slots:
     void scanFinished();
 
 private:
-    int m_timeout = 5000;
+    int m_timeout = 10000;
     QList<QObject*> m_devices;
     QBluetoothDeviceDiscoveryAgent *m_deviceDiscoveryAgent;
 

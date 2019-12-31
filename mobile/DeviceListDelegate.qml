@@ -16,7 +16,7 @@ Item {
         anchors.fill: parent
         Label {
             id: name
-            text: deviceName ? deviceName : qsTr(' Device Name Unknown: ') + delegateIndex
+            text: deviceName ? deviceName : qsTr('Device Name Unavailable ') + delegateIndex
             font.pointSize: 16
         }
 

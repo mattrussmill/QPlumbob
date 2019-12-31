@@ -49,7 +49,8 @@ void ScanService::startScan()
     m_devices.clear();
     emit devicesChanged();
 
-    m_deviceDiscoveryAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
+    //m_deviceDiscoveryAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
+    m_deviceDiscoveryAgent->start();
     emit scanningChanged();
     setInfo(tr("Scanning for devices..."));
 }
