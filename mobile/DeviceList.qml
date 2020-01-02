@@ -1,7 +1,6 @@
 import QtQuick 2.12
 import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.12
-import QtBluetooth 5.12
 
 Item {
     id: root
@@ -12,11 +11,26 @@ Item {
         id: list
         anchors.fill: parent
         model: scanService.devices
+        property int selectedIndex: -1
         visible: count > 0
         delegate: DeviceListDelegate {
             deviceName: modelData.name
             deviceAddress: modelData.address
             delegateIndex: index
+            Component.onCompleted: {
+                deviceSelected.connect(list.selectedDevice)
+                list.deselectDevices.connect(deselectDevice)
+            }
+        }
+
+        signal deselectDevices(int index)
+
+        function selectedDevice(index) {
+            if (selectedIndex !== -1 && selectedIndex !== index) {
+                deselectDevices(selectedIndex)
+            }
+            selectedIndex = index
+            console.log('clicked: ' + index)
         }
     }
 
@@ -40,9 +54,11 @@ Item {
         anchors.right: parent.right
         anchors.left: parent.left
         anchors.bottom: parent.bottom
+        connectEnabled: list.selectedIndex >= 0
 
         Component.onCompleted: {
             scanClicked.connect(scanService.startScan)
+            scanClicked.connect(() => list.selectedDevice(-1))
             connectClicked.connect(scanService.stopScan)
             connectClicked.connect(deviceConnected) //@TODO temporary
             scanService.startScan()
