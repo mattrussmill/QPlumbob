@@ -1,11 +1,11 @@
 import QtQuick 2.12
 import QtQuick.Controls 2.12
-import QtQuick.Controls.Material 2.12
 
-Rectangle {
+ItemDelegate {
     id: root
     width: parent.width
     height: column.implicitHeight
+    highlighted: false
     property string deviceName
     property string deviceAddress
     property bool expended: false
@@ -16,7 +16,7 @@ Rectangle {
     function deselectDevice(index) {
         if(index === delegateIndex) {
             root.expended = false
-            root.color = Material.background
+            highlighted = false
         }
     }
 
@@ -41,18 +41,15 @@ Rectangle {
         }
     }
 
-    Behavior on color { ColorAnimation { duration: 200 } }
-
     MouseArea {
         anchors.fill: parent
         onClicked: {
             root.expended = !root.expended
+            root.highlighted = !root.highlighted
 
             if(root.expended) {
-                root.color = Material.accent
                 deviceSelected(root.delegateIndex);
             } else {
-                root.color = Material.background
                 deviceSelected(-1);
             }
         }

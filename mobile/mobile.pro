@@ -23,7 +23,9 @@ SOURCES += \
         main.cpp \
         scanservice.cpp
 
-RESOURCES += qml.qrc
+RESOURCES += \
+    qml.qrc \
+    config.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =

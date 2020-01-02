@@ -53,7 +53,6 @@ void loop() {
 
 }
 
-
 void blePeripheralConnectHandler(BLEDevice central) {
   // central connected event handler
   digitalWrite(LED_BUILTIN, HIGH);
