@@ -15,11 +15,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 HEADERS += \
     bluetoothbase.h \
     device.h \
+    deviceservice.h \
     scanservice.h
 
 SOURCES += \
         bluetoothbase.cpp \
         device.cpp \
+        deviceservice.cpp \
         main.cpp \
         scanservice.cpp
 

@@ -9,10 +9,12 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
-    ScanService scanService;
+    DeviceService deviceService;
+    ScanService scanService(&deviceService);
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("scanService", &scanService);
+    engine.rootContext()->setContextProperty("deviceService", &deviceService);
 
     const QUrl url = QStringLiteral("qrc:/main.qml");
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,

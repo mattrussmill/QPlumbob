@@ -12,8 +12,21 @@ ScanService::ScanService(QObject *parent) : BluetoothBase(parent)
             this, &ScanService::scanError);
     connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::finished, this, &ScanService::scanFinished);
     connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::canceled, this, &ScanService::scanFinished);
-
 }
+
+ScanService::ScanService(DeviceService *deviceService, QObject *parent) :
+    BluetoothBase(parent), m_deviceService(deviceService)
+{
+    m_deviceDiscoveryAgent = new QBluetoothDeviceDiscoveryAgent(this);
+    m_deviceDiscoveryAgent->setLowEnergyDiscoveryTimeout(m_timeout);
+
+    connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered, this, &ScanService::addDevice);
+    connect(m_deviceDiscoveryAgent, static_cast<void (QBluetoothDeviceDiscoveryAgent::*)(QBluetoothDeviceDiscoveryAgent::Error)>(&QBluetoothDeviceDiscoveryAgent::error),
+            this, &ScanService::scanError);
+    connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::finished, this, &ScanService::scanFinished);
+    connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::canceled, this, &ScanService::scanFinished);
+}
+
 ScanService::~ScanService()
 {
     qDeleteAll(m_devices);
@@ -49,8 +62,7 @@ void ScanService::startScan()
     m_devices.clear();
     emit devicesChanged();
 
-    //m_deviceDiscoveryAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
-    m_deviceDiscoveryAgent->start();
+    m_deviceDiscoveryAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
     emit scanningChanged();
     setInfo(tr("Scanning for devices..."));
 }
@@ -70,6 +82,32 @@ void ScanService::scanFinished()
     emit scanningChanged();
 }
 
+void ScanService::connectToDevice(const QString &address)
+{
+    m_deviceDiscoveryAgent->stop();
+
+    Device *currentDevice = nullptr;
+    for (QObject *d : qAsConst(m_devices))
+    {
+        auto device = qobject_cast<Device *>(d);
+        if (device && device->getAddress() == address)
+        {
+            currentDevice = device;
+            break;
+        }
+    }
+
+    if (!currentDevice)
+    {
+        setError("Unable to connect to device " + address.toLatin1() + ". Device not found.");
+        emit deviceLookupError();
+        return;
+    }
+
+    clearMessages();
+    m_deviceService->setDevice(currentDevice);
+}
+
 int ScanService::timeout() const
 {
    return m_timeout;
@@ -85,6 +123,11 @@ void ScanService::setTimeout(int timeout)
 
     m_timeout = timeout;
     setInfo(tr("Scan timeout set to " + QString::number(timeout).toLatin1() + "ms"));
+}
+
+void ScanService::setDeviceService(DeviceService *deviceService)
+{
+    m_deviceService = deviceService;
 }
 
 void ScanService::scanError(QBluetoothDeviceDiscoveryAgent::Error error)
