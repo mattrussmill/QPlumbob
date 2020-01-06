@@ -6,6 +6,7 @@
 #include <QLowEnergyController>
 #include <QLowEnergyService>
 #include "bluetoothbase.h"
+#include "../deviceidentifiers.h"
 
 class Device;
 
@@ -21,19 +22,17 @@ class DeviceService : public BluetoothBase
     Q_PROPERTY(int gluteusDutyCycle READ gluteusDutyCycle NOTIFY gluteusDutyCycleChanged)
 
 public:
-    enum AvailableRegion {
-        PELVIS = 0x1,
-        GLUTEUS = 0x2
-    };
-    Q_ENUM(AvailableRegion)
+
+    Q_ENUM(DevInfo::AvailableRegion)
 
     DeviceService(QObject *parent = nullptr);
     DeviceService(Device *device, QObject *parent = nullptr);
-    void setDevice(Device *device);
+    ~DeviceService();
 
+    void setDevice(Device *device);
     bool alive() const;
     int availableRegions() const;
-    int timeoutRemaining() const;
+    int timeoutRemaining() const; //TODO do I need a function for service discovery?
 
     int pelvisDutyCycle() const;
     bool pelvisAvailable() const;
@@ -45,22 +44,33 @@ public slots:
     void disconnectService();
     void setDutyCycle(uint flag, int percent);
     void setTimeout(int minutes);
-    void queryRegions();
+    void queryDutyCycleRegions();
+    void queryDeviceVersionInfo();
 
 signals:
     void aliveChanged();
     void availableRegionsChanged();
     void safetyTimeoutChanged();
-    void reportError(); //notify user of error
+    void reportErrorToUser(QString);
 
     void pelvisDutyCycleChanged();
     void gluteusDutyCycleChanged();
 
 private:
+    void serviceDiscovered(const QBluetoothUuid &);
+    void serviceScanFinished();
+    void serviceStateChanged(QLowEnergyService::ServiceState s);
+
+    void updateValue(const QLowEnergyCharacteristic &c,
+                              const QByteArray &value); //rename and do something with these
+    void confirmedDescriptorWrite(const QLowEnergyDescriptor &d,
+                              const QByteArray &value); //rename and do something with these
+
     QLowEnergyController *m_control = nullptr;
     QLowEnergyService *m_service = nullptr;
     Device *m_device = nullptr;
-    uint m_availableRegions = 0;
+    uint m_availableRegions;
+    // need version number for device. get device type from UUID lookup in another header file.
     QMap<uint, char> m_dutyCycles;
 };
 

@@ -1,66 +1,124 @@
 /* BOARD: Arduino Nano 33 IoT */
 
 #include <ArduinoBLE.h> //version 1.1.2
+#include "U:/miller/Documents/MacoSpanks/deviceidentifiers.h" // must use absolute path arduino IDE
 
-#define DUTY_CYCLE 200 // duty cycle in ms
+// nano 33 PWM duty cycle: 490 Hz (pins 5 and 6: 980 Hz)
+#define PELVIS_PIN 10
+#define GLUTEUS_PIN 11
 
-BLEService temperatureService("b1b01000-2a07-4cbb-80cb-1eaeaf18b124");  // BLE Heating Service
-BLEShortCharacteristic regionDutyCycle("b1b01001-2a07-4cbb-80cb-1eaeaf18b124", BLERead | BLEWrite); // ms8b - Front / ls8b - Rear 0% to 100%
-BLEDescriptor regionDutyCycleLabel("b1b01001-2a07-4cbb-80cb-1eaeaf18b124", "percent duty cycle");
+// BLE Heating PWM Service
+BLEService garmentService(DevInfo::GARMENT_SERVICE);
 
-void setup() {
+// BLE Garment Characteristics : 4 header bytes, 2 data bytes for heat element regions available for pwm data format
+BLEUnsignedCharCharacteristic pelvisCharacteristic(DevInfo::PELVIS_PWM_CHARACTERISTIC, BLERead | BLEWrite);
+BLEUnsignedCharCharacteristic gluteusCharacteristic(DevInfo::GLUTEUS_PWM_CHARACTERISTIC, BLERead | BLEWrite);
+BLEIntCharacteristic timerCharacteristic(DevInfo::TIMER_CHARACTERISTIC, BLERead | BLEWrite);
+
+
+void setup()
+{
   // initialize serial communication
   Serial.begin(9600);
 
+  
   // initialize I/O
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
+  
+  pinMode(PELVIS_PIN, OUTPUT);
+  analogWrite(PELVIS_PIN, 0);
+  
+  pinMode(GLUTEUS_PIN, OUTPUT);
+  analogWrite(GLUTEUS_PIN, 0);
 
+  
   // initialize BLE module
   if (!BLE.begin())
   {
     Serial.println("BLE failed - device haulted");
     while (1);
   }
-  
-  // setup BLE characteristics
-  regionDutyCycle.addDescriptor(regionDutyCycleLabel);
-  regionDutyCycle.writeValue(0);            // set initial state to 0% duty cycle all regions
-  
-  // setup BLE service
-  temperatureService.addCharacteristic(regionDutyCycle);
 
+  
+  /* setup BLE characteristics */
+  // set initial state to -1; timer disabled
+  timerCharacteristic.writeValue(-1);
+
+
+  // enable two regions for this device in the off position
+  pelvisCharacteristic.writeValue(0);
+  gluteusCharacteristic.writeValue(0);
+
+
+  // setup BLE service
+  garmentService.addCharacteristic(timerCharacteristic);
+  garmentService.addCharacteristic(pelvisCharacteristic);
+  garmentService.addCharacteristic(gluteusCharacteristic);
+
+  
   // setup BLE module
-  BLE.addService(temperatureService);
-  BLE.setAdvertisedService(temperatureService); //@TODO is this necessary? Can I not advertise the service?
-  BLE.setDeviceName("MacoGarment_v0.0.1");      // device name
+  BLE.addService(garmentService);
+  BLE.setAdvertisedService(garmentService);     // @TODO is this necessary? Can I not advertise the service?
+  BLE.setDeviceName("MacoGarment_v0.0.1");      // device name -> how does this differ from garment?
   BLE.setLocalName("MacoGarment");              // advertising name
   //BLE.setAdvertisingInterval(320);            // 200 * 0.625 ms
   BLE.setConnectable(true);
 
-  // set callback functions for events
-  BLE.setEventHandler(BLEConnected, blePeripheralConnectHandler);
-  BLE.setEventHandler(BLEDisconnected, blePeripheralDisconnectHandler);
 
+  // set callback functions for events
+  BLE.setEventHandler(BLEConnected, bleConnectedHandler);
+  BLE.setEventHandler(BLEDisconnected, bleDisconnectedHandler);
+  pelvisCharacteristic.setEventHandler(BLEWritten, pwmWriteHandler);
+  gluteusCharacteristic.setEventHandler(BLEWritten, pwmWriteHandler);
+  
   // finish initialization
-  BLE.advertise();                          //start advertising
+  BLE.advertise();                              // start advertising
   Serial.println("Initialization complete... advertising");
 }
 
-void loop() {
+
+void loop() 
+{
   // put your main code here, to run repeatedly:
   BLE.poll();
 
 }
 
-void blePeripheralConnectHandler(BLEDevice central) {
+
+void timeoutWriteHandler(BLEDevice central, BLECharacteristic characteristic)
+{
+  //TODO
+}
+
+
+void pwmWriteHandler(BLEDevice central, BLECharacteristic characteristic)
+{
+  if(memcmp(characteristic.uuid(), DevInfo::PELVIS_PWM_CHARACTERISTIC,
+            sizeof(DevInfo::PELVIS_PWM_CHARACTERISTIC)) == 0)
+  {
+    // TODO set analog pin
+  }
+  else if(memcmp(characteristic.uuid(), DevInfo::PELVIS_PWM_CHARACTERISTIC,
+            sizeof(DevInfo::PELVIS_PWM_CHARACTERISTIC)) == 0)
+  {
+    // TODO set analog pin
+  }
+  //TODO
+}
+
+
+void bleConnectedHandler(BLEDevice central)
+{
   // central connected event handler
   digitalWrite(LED_BUILTIN, HIGH);
   Serial.print("Connected event, central: ");
   Serial.println(central.address());
 }
 
-void blePeripheralDisconnectHandler(BLEDevice central) {
+
+void bleDisconnectedHandler(BLEDevice central)
+{
   // central disconnected event handler
   digitalWrite(LED_BUILTIN, LOW);
   Serial.print("Disconnected event, central: ");
