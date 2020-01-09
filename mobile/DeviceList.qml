@@ -30,7 +30,14 @@ Item {
                 deselectDevices(selectedIndex)
             }
             selectedIndex = index
-            console.log('clicked: ' + index)
+        }
+
+        function connectToDevice() {
+            if (selectedIndex < 0) {
+                console.log('Invalid device selected')
+                return;
+            }
+            scanService.connectToDevice(scanService.devices[selectedIndex].address)
         }
     }
 
@@ -59,9 +66,11 @@ Item {
         Component.onCompleted: {
             scanClicked.connect(scanService.startScan)
             scanClicked.connect(() => list.selectedDevice(-1))
-            connectClicked.connect(scanService.stopScan)
-            connectClicked.connect(deviceConnected) //@TODO temporary
+            //connectClicked.connect(scanService.stopScan)
+            connectClicked.connect(list.connectToDevice)
             scanService.startScan()
+            //connectClicked.connect(deviceConnected) //@TODO temporary
+
         }
     }
 }

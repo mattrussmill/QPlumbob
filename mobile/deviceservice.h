@@ -22,9 +22,6 @@ class DeviceService : public BluetoothBase
     Q_PROPERTY(int gluteusDutyCycle READ gluteusDutyCycle NOTIFY gluteusDutyCycleChanged)
 
 public:
-
-    Q_ENUM(DevInfo::AvailableRegion)
-
     DeviceService(QObject *parent = nullptr);
     DeviceService(Device *device, QObject *parent = nullptr);
     ~DeviceService();
@@ -56,11 +53,12 @@ signals:
     void pelvisDutyCycleChanged();
     void gluteusDutyCycleChanged();
 
-private:
+private slots:
     void serviceDiscovered(const QBluetoothUuid &);
     void serviceScanFinished();
-    void serviceStateChanged(QLowEnergyService::ServiceState s);
+    //void serviceStateChanged(QLowEnergyService::ServiceState s);
 
+private:
     void updateValue(const QLowEnergyCharacteristic &c,
                               const QByteArray &value); //rename and do something with these
     void confirmedDescriptorWrite(const QLowEnergyDescriptor &d,
@@ -68,6 +66,7 @@ private:
 
     QLowEnergyController *m_control = nullptr;
     QLowEnergyService *m_service = nullptr;
+    QLowEnergyDescriptor m_notificationDesc;
     Device *m_device = nullptr;
     uint m_availableRegions;
     // need version number for device. get device type from UUID lookup in another header file.

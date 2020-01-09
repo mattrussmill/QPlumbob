@@ -80,10 +80,12 @@ void ScanService::scanFinished()
         setInfo(tr("Scanning done."));
 
     emit scanningChanged();
+    emit devicesChanged();
 }
 
 void ScanService::connectToDevice(const QString &address)
 {
+    qDebug() << address << " THIS IS CONNECT FUNCTION!";
     m_deviceDiscoveryAgent->stop();
 
     Device *currentDevice = nullptr;
@@ -97,15 +99,17 @@ void ScanService::connectToDevice(const QString &address)
         }
     }
 
-    if (!currentDevice)
+    if (currentDevice)
     {
-        setError("Unable to connect to device " + address.toLatin1() + ". Device not found.");
+        m_deviceService->setDevice(currentDevice);
+        clearMessages();
+    }
+    else
+    {
+        setError(tr("Unable to connect to device " + address.toLatin1() + ". Device not found."));
         emit deviceLookupError();
-        return;
     }
 
-    clearMessages();
-    m_deviceService->setDevice(currentDevice);
 }
 
 int ScanService::timeout() const
@@ -122,7 +126,7 @@ void ScanService::setTimeout(int timeout)
     }
 
     m_timeout = timeout;
-    setInfo(tr("Scan timeout set to " + QString::number(timeout).toLatin1() + "ms"));
+    setInfo(tr("Scan timeout set: " + QString::number(timeout).toLatin1() + "ms"));
 }
 
 void ScanService::setDeviceService(DeviceService *deviceService)
@@ -141,7 +145,7 @@ void ScanService::scanError(QBluetoothDeviceDiscoveryAgent::Error error)
         }
         case(QBluetoothDeviceDiscoveryAgent::InputOutputError):
         {
-            setError(tr("Writing or reading from the device resulted in an error."));
+            setError(tr("Writing to or reading from the device resulted in an error."));
             break;
         }
         case(QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError):
