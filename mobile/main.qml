@@ -10,6 +10,8 @@ ApplicationWindow {
         id: titleBar
         Component.onCompleted: {
             backButtonClicked.connect(stack.pop)
+            backButtonClicked.connect(scanService.stopScan)
+
         }
     }
 
@@ -25,7 +27,8 @@ ApplicationWindow {
                 id: deviceList
 
                 Component.onCompleted: {
-                    deviceConnected.connect(() => stack.push(selectedGarmentComponent))
+                    titleBar.backButtonClicked.connect(unselectDevices)
+                    //deviceConnected.connect(() => stack.push(selectedGarmentComponent))
                 }
             }
         }

@@ -5,7 +5,9 @@ import QtQuick.Controls 2.12
 Item {
     id: root
 
-    signal deviceConnected() // will pass device info?
+    function unselectDevices() {
+        list.selectedIndex = -1
+    }
 
     ListView {
         id: list
@@ -17,18 +19,15 @@ Item {
             deviceName: modelData.name
             deviceAddress: modelData.address
             delegateIndex: index
+            selectedDelegateInList: list.selectedIndex //use property binding to deselect items
             Component.onCompleted: {
-                deviceSelected.connect(list.selectedDevice)
-                list.deselectDevices.connect(deselectDevice)
+                deviceSelected.connect(list.setSelectedDevice)
             }
         }
 
         signal deselectDevices(int index)
 
-        function selectedDevice(index) {
-            if (selectedIndex !== -1 && selectedIndex !== index) {
-                deselectDevices(selectedIndex)
-            }
+        function setSelectedDevice(index) {
             selectedIndex = index
         }
 
@@ -65,8 +64,8 @@ Item {
 
         Component.onCompleted: {
             scanClicked.connect(scanService.startScan)
-            scanClicked.connect(() => list.selectedDevice(-1))
-            //connectClicked.connect(scanService.stopScan)
+            scanClicked.connect(() => list.setSelectedDevice(-1))
+            connectClicked.connect(scanService.stopScan)
             connectClicked.connect(list.connectToDevice)
             scanService.startScan()
             //connectClicked.connect(deviceConnected) //@TODO temporary

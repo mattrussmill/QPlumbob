@@ -69,7 +69,8 @@ void ScanService::startScan()
 
 void ScanService::stopScan()
 {
-    m_deviceDiscoveryAgent->stop();
+    if(m_deviceDiscoveryAgent->isActive())
+        m_deviceDiscoveryAgent->stop();
 }
 
 void ScanService::scanFinished()
@@ -85,7 +86,6 @@ void ScanService::scanFinished()
 
 void ScanService::connectToDevice(const QString &address)
 {
-    qDebug() << address << " THIS IS CONNECT FUNCTION!";
     m_deviceDiscoveryAgent->stop();
 
     Device *currentDevice = nullptr;

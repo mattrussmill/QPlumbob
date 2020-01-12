@@ -8,15 +8,16 @@ ItemDelegate {
     highlighted: false
     property string deviceName
     property string deviceAddress
-    property bool expended: false
+    property bool expanded: false
     property int delegateIndex
+    property int selectedDelegateInList
 
     signal deviceSelected(int index)
 
-    function deselectDevice(index) {
-        if(index === delegateIndex) {
-            root.expended = false
-            highlighted = false
+    onSelectedDelegateInListChanged: {
+        if(selectedDelegateInList != delegateIndex) {
+            root.expanded = false;
+            root.highlighted = false;
         }
     }
 
@@ -32,7 +33,7 @@ ItemDelegate {
         Label {
             id: details
             visible: opacity !== 0
-            opacity: root.expended ? 1 : 0.0
+            opacity: root.expanded ? 1 : 0.0
             text: deviceAddress
             font.pointSize: 14
             Behavior on opacity {
@@ -44,14 +45,15 @@ ItemDelegate {
     MouseArea {
         anchors.fill: parent
         onClicked: {
-            root.expended = !root.expended
+            root.expanded = !root.expanded
             root.highlighted = !root.highlighted
 
-            if(root.expended) {
+            if(root.expanded) {
                 deviceSelected(root.delegateIndex);
             } else {
                 deviceSelected(-1);
             }
         }
+
     }
 }
