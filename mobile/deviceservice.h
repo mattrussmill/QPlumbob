@@ -18,8 +18,8 @@ class DeviceService : public BluetoothBase
     Q_PROPERTY(int availableRegions READ availableRegions NOTIFY availableRegionsChanged)
     Q_PROPERTY(int timeoutRemaining READ timeoutRemaining WRITE setTimeout)
 
-    Q_PROPERTY(int pelvisDutyCycle READ pelvisDutyCycle NOTIFY pelvisDutyCycleChanged)
-    Q_PROPERTY(int gluteusDutyCycle READ gluteusDutyCycle NOTIFY gluteusDutyCycleChanged)
+    Q_PROPERTY(int pelvisDutyCycle READ pelvisDutyCycle WRITE setPelvisDutyCyckle NOTIFY pelvisDutyCycleChanged)
+    Q_PROPERTY(int gluteusDutyCycle READ gluteusDutyCycle WRITE setGluteusDutyCyckle NOTIFY gluteusDutyCycleChanged)
 
 public:
     DeviceService(QObject *parent = nullptr);
@@ -38,10 +38,13 @@ public:
     bool gluteusAvailable() const;
 
 public slots:
-    void disconnectService();
-    void setDutyCycle(uint flag, int percent);
+    void disconnectDevice();
+    void disconnectServices();
+
+    void setPelvisDutyCyckle(int percent);
+    void setGluteusDutyCyckle(int percent);
     void setTimeout(int minutes);
-    void queryDutyCycleRegions();
+    void queryGarmentService(); // TODO use this at init to get init values if disconnected and reconnected.
     void queryDeviceVersionInfo();
 
 signals:
@@ -51,12 +54,16 @@ signals:
     void reportErrorToUser(QString);
 
     void pelvisDutyCycleChanged();
+    void pelvisSetDutyCycleFailed();
     void gluteusDutyCycleChanged();
+    void gluteusSetDutyCycleFailed();
 
 private slots:
     void serviceDiscovered(const QBluetoothUuid &);
+    void serviceStateChanged(QLowEnergyService::ServiceState state);
+    void serviceError(QLowEnergyService::ServiceError newError);
     void serviceScanFinished();
-    //void serviceStateChanged(QLowEnergyService::ServiceState s);
+    void updateGarmentCharacteristic(const QLowEnergyCharacteristic &characteristic, const QByteArray &value);
 
 private:
     void updateValue(const QLowEnergyCharacteristic &c,
@@ -65,12 +72,13 @@ private:
                               const QByteArray &value); //rename and do something with these
 
     QLowEnergyController *m_control = nullptr;
-    QLowEnergyService *m_service = nullptr;
+    QLowEnergyService *m_garmentService = nullptr;
     QLowEnergyDescriptor m_notificationDesc;
     Device *m_device = nullptr;
-    uint m_availableRegions;
-    // need version number for device. get device type from UUID lookup in another header file.
-    QMap<uint, char> m_dutyCycles;
+    bool m_foundGarmentService = false;
+
+    uint8_t m_pelvisDutyCycle = 0;
+    uint8_t m_gluteusDutyCycle = 0;
 };
 
 #endif // DEVICESERVICE_H

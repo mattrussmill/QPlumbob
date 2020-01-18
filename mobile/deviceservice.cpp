@@ -1,15 +1,18 @@
+#include <QBluetoothUuid>
+#include <QString>
 #include "deviceservice.h"
 #include "device.h"
-#include <QBluetoothUuid>
+#include "../deviceidentifiers.h"
+
 
 DeviceService::DeviceService(QObject *parent) :
-    BluetoothBase(parent), m_availableRegions(0)
+    BluetoothBase(parent)
 {
 
 }
 
 DeviceService::DeviceService(Device *device, QObject *parent) :
-    BluetoothBase(parent), m_device(device), m_availableRegions(0)
+    BluetoothBase(parent), m_device(device)
 {
 
 }
@@ -24,7 +27,6 @@ void DeviceService::setDevice(Device *device)
     clearMessages();
     m_device = device;
 
-    qDebug() << device->getName() << "was passed to setDevice";
     // disconnect and delete old device if exists
     if(m_control)
     {
@@ -60,95 +62,151 @@ void DeviceService::setDevice(Device *device)
 
 void DeviceService::serviceDiscovered(const QBluetoothUuid &gatt)
 {
-
     setInfo("Service " + gatt.toString(QUuid::WithoutBraces)
             + " found to be offered by " + m_device->getName()
             + ".");
-    //TODO
-//    if (gatt == QBluetoothUuid(QBluetoothUuid::HeartRate)) {
-//        setInfo("Heart Rate service discovered. Waiting for service scan to be done...");
-//        m_foundHeartRateService = true;
-//    }
+
+    // check if service is expected
+    if (gatt == QBluetoothUuid(QLatin1String(DevInfo::GARMENT_SERVICE)))
+    {
+        setInfo(tr("Garment service discovered."));
+        m_foundGarmentService = true;
+    }
+}
+
+void DeviceService::disconnectDevice()
+{
+    disconnectServices();
+
+    m_control->disconnectFromDevice();
+    delete m_control;
+    m_control = nullptr;
+}
+
+void DeviceService::disconnectServices()
+{
+    //TODO setup notifications
+
+    m_foundGarmentService = false;
+    if(m_garmentService)
+    {
+        delete m_garmentService;
+        m_garmentService = nullptr;
+    }
 }
 
 void DeviceService::serviceScanFinished()
 {
-    setInfo("Service scan finished. "
-            + QString::number(m_control->services().length())
-            + " services found.");
+    setInfo(tr("Service scan finished. "
+            + QString::number(m_control->services().length()).toLatin1()
+            + " services found."));
 
     // delete old service if available
-    if (m_service) {
-        delete m_service;
-        m_service = nullptr;
+    if (m_garmentService) {
+        delete m_garmentService;
+        m_garmentService = nullptr;
     }
 
-    //TODO example for predefined services
-//    // If heartRateService found, create new service
-//    if (m_foundHeartRateService)
-//        m_service = m_control->createServiceObject(QBluetoothUuid(QBluetoothUuid::HeartRate), this);
+    // setup services if found
+    if (m_foundGarmentService)
+    {
+        m_garmentService = m_control->createServiceObject(QBluetoothUuid(QLatin1String(DevInfo::GARMENT_SERVICE)), this);
 
+        if (m_garmentService)
+        {
+            connect(m_garmentService, &QLowEnergyService::stateChanged, this, &DeviceService::serviceStateChanged);
+            connect(m_garmentService, &QLowEnergyService::characteristicWritten, this, &DeviceService::updateGarmentCharacteristic);
+            // TODO add additional signals needed as well as error for characteristicWritten and class
+            setInfo(tr("Garment service set."));
+        }
+    }
 }
 
-//void serviceStateChanged(QLowEnergyService::ServiceState s)
-//{
-//    //TODO
-//}
+void DeviceService::updateGarmentCharacteristic(const QLowEnergyCharacteristic &characteristic, const QByteArray &value)
+{
+    if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::PELVIS_PWM_CHARACTERISTIC)))
+    {
+        m_pelvisDutyCycle = *value.data();
+        emit pelvisDutyCycleChanged();
+    } else if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::GLUTEUS_PWM_CHARACTERISTIC)))
+    {
+        m_gluteusDutyCycle = *value.data();
+        emit gluteusDutyCycleChanged();
+    }
+}
+
+void DeviceService::serviceStateChanged(QLowEnergyService::ServiceState state)
+{
+//    switch(state)
+//    {
+//        case QLowEnergyService::DiscoveringServices :
+//            setInfo(tr("Discovering services..."));
+//            break;
+//        case                      //TODO
+//    }
+}
+
+void DeviceService::serviceError(QLowEnergyService::ServiceError newError)
+{
+    // TODO
+}
 
 bool DeviceService::alive() const
 {
-    //TODO service discovery required
-    return false;
+    return m_garmentService->state() == QLowEnergyService::ServiceDiscovered;
 }
 
 int DeviceService::availableRegions() const
 {
-    return -1;
+    return -1; // TODO
 }
 
 int DeviceService::timeoutRemaining() const
 {
-    return -1;
+    return -1; // TODO
+}
+
+void DeviceService::setPelvisDutyCyckle(int percent)
+{
+    setInfo(tr("Attempting to set pelvis pwm to: " + QString::number(percent).toLatin1() + "%"));
+    m_garmentService->writeCharacteristic(
+                m_garmentService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::PELVIS_PWM_CHARACTERISTIC))),
+                QByteArray(1, static_cast<uchar>(percent)),
+                QLowEnergyService::WriteMode::WriteWithResponse);
 }
 
 int DeviceService::pelvisDutyCycle() const
 {
-    return -1;
+    return m_pelvisDutyCycle;
 }
 
 bool DeviceService::pelvisAvailable() const
 {
-    return -1;
+    return m_garmentService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::PELVIS_PWM_CHARACTERISTIC))).isValid();
+}
+
+void DeviceService::setGluteusDutyCyckle(int percent)
+{
+    setInfo(tr("Attempting to set gluteus pwm to: " + QString::number(percent).toLatin1() + "%"));
+    m_garmentService->writeCharacteristic(
+                m_garmentService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::GLUTEUS_PWM_CHARACTERISTIC))),
+                QByteArray(1, static_cast<uchar>(percent)),
+                QLowEnergyService::WriteMode::WriteWithResponse);
 }
 
 int DeviceService::gluteusDutyCycle() const
 {
-    return -1;
+    return m_gluteusDutyCycle;
 }
 
 bool DeviceService::gluteusAvailable() const
 {
-    return false;
-}
-
-void DeviceService::disconnectService()
-{
-    m_dutyCycles.clear();
-}
-
-void DeviceService::setDutyCycle(uint flag, int percent)
-{
-
+    return m_garmentService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::GLUTEUS_PWM_CHARACTERISTIC))).isValid();
 }
 
 void DeviceService::setTimeout(int minutes)
 {
-
-}
-
-void DeviceService::queryDutyCycleRegions()
-{
-
+ // TODO
 }
 
 void DeviceService::queryDeviceVersionInfo()

@@ -11,7 +11,7 @@ ApplicationWindow {
         Component.onCompleted: {
             backButtonClicked.connect(stack.pop)
             backButtonClicked.connect(scanService.stopScan)
-
+            backButtonClicked.connect(deviceService.disconnectDevice)
         }
     }
 
@@ -19,6 +19,16 @@ ApplicationWindow {
         id: stack
         initialItem: deviceListComponent
         anchors.fill: parent
+
+//        Component.onCompleted: {
+//            deviceService.onAliveChanged.connect(() => {
+//                                                     console.log('@@@@@@@@@@@@@@@@@@')
+//                                       if(deviceService.alive)
+//                                          console.log('CONNECTED')
+//                                       else
+//                                           console.log('DISCONNECTED')
+//                                               } )
+//        }
 
         Component {
             id: deviceListComponent
@@ -38,6 +48,7 @@ ApplicationWindow {
 
             GarmentMenu {
                 id: selectedGarment
+                //push 'on alive changed'
             }
         }
     }
