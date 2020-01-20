@@ -40,8 +40,6 @@ void DeviceService::setDevice(Device *device)
     {
         m_control = QLowEnergyController::createCentral(m_device->getDevice(), this);
 
-            qDebug() << m_control;
-
         connect(m_control, &QLowEnergyController::serviceDiscovered, this, &DeviceService::serviceDiscovered);
         connect(m_control, &QLowEnergyController::discoveryFinished, this, &DeviceService::serviceScanFinished);
         connect(m_control, static_cast<void (QLowEnergyController::*)(QLowEnergyController::Error)>(&QLowEnergyController::error),
@@ -78,9 +76,12 @@ void DeviceService::disconnectDevice()
 {
     disconnectServices();
 
-    m_control->disconnectFromDevice();
-    delete m_control;
-    m_control = nullptr;
+    if(m_control)
+    {
+        m_control->disconnectFromDevice();
+        delete m_control;
+        m_control = nullptr;
+    }
 }
 
 void DeviceService::disconnectServices()
@@ -93,6 +94,8 @@ void DeviceService::disconnectServices()
         delete m_garmentService;
         m_garmentService = nullptr;
     }
+
+    emit aliveChanged();
 }
 
 void DeviceService::serviceScanFinished()
@@ -116,7 +119,10 @@ void DeviceService::serviceScanFinished()
         {
             connect(m_garmentService, &QLowEnergyService::stateChanged, this, &DeviceService::serviceStateChanged);
             connect(m_garmentService, &QLowEnergyService::characteristicWritten, this, &DeviceService::updateGarmentCharacteristic);
-            // TODO add additional signals needed as well as error for characteristicWritten and class
+            connect(m_garmentService, QOverload<QLowEnergyService::ServiceError>::of(&QLowEnergyService::error), this, &DeviceService::serviceError);
+            connect(m_garmentService, &QLowEnergyService::stateChanged, this, &DeviceService::serviceStateChanged);
+
+            m_garmentService->discoverDetails();
             setInfo(tr("Garment service set."));
         }
     }
@@ -137,28 +143,55 @@ void DeviceService::updateGarmentCharacteristic(const QLowEnergyCharacteristic &
 
 void DeviceService::serviceStateChanged(QLowEnergyService::ServiceState state)
 {
-//    switch(state)
-//    {
-//        case QLowEnergyService::DiscoveringServices :
-//            setInfo(tr("Discovering services..."));
-//            break;
-//        case                      //TODO
-//    }
+    switch(state)
+    {
+        case QLowEnergyService::InvalidService :
+            setInfo(tr("Service State: Invalid service - connection may have been lost."));
+            break;
+        case QLowEnergyService::DiscoveryRequired :
+            setInfo(tr("Service State: Service discovery required."));
+            break;
+        case QLowEnergyService::DiscoveringServices :
+            setInfo(tr("Service State: Discovering services."));
+            break;
+        case QLowEnergyService::ServiceDiscovered :
+            setInfo(tr("Service State: Service discovered."));
+            break;
+    }
+    emit aliveChanged();
 }
 
-void DeviceService::serviceError(QLowEnergyService::ServiceError newError)
+void DeviceService::serviceError(QLowEnergyService::ServiceError error)
 {
-    // TODO
+    switch(error)
+    {
+        case QLowEnergyService::OperationError :
+            setError(tr("An operation was attempted while the service was not ready."));
+            break;
+        case QLowEnergyService::CharacteristicReadError :
+            setError(tr("An attempt to read a characteristic value failed."));
+            break;
+        case QLowEnergyService::CharacteristicWriteError :
+            setError(tr("An attempt to write a new value to a characteristic failed."));
+            break;
+        case QLowEnergyService::DescriptorReadError :
+            setError(tr("An attempt to read a descriptor value failed. "));
+            break;
+        case QLowEnergyService::DescriptorWriteError :
+            setError(tr("An attempt to write a new value to a descriptor failed."));
+            break;
+        case QLowEnergyService::UnknownError :
+            setError(tr("An unknown error occurred when interacting with the service."));
+            break;
+    }
 }
 
 bool DeviceService::alive() const
 {
-    return m_garmentService->state() == QLowEnergyService::ServiceDiscovered;
-}
+    if(!m_garmentService)
+        return false;
 
-int DeviceService::availableRegions() const
-{
-    return -1; // TODO
+    return m_garmentService->state() == QLowEnergyService::ServiceDiscovered;
 }
 
 int DeviceService::timeoutRemaining() const
@@ -209,9 +242,14 @@ void DeviceService::setTimeout(int minutes)
  // TODO
 }
 
+void DeviceService::queryGarmentService()
+{
+    // TODO use this at init to get init values if disconnected and reconnected.
+}
+
 void DeviceService::queryDeviceVersionInfo()
 {
-
+    //TODO
 }
 
 

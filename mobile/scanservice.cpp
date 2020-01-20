@@ -92,7 +92,7 @@ void ScanService::connectToDevice(const QString &address)
     for (QObject *d : qAsConst(m_devices))
     {
         auto device = qobject_cast<Device *>(d);
-        if (device && device->getAddress() == address)
+        if (device && device->getAddress() == address) //iOS will have to be uuid
         {
             currentDevice = device;
             break;
@@ -139,32 +139,21 @@ void ScanService::scanError(QBluetoothDeviceDiscoveryAgent::Error error)
     switch (error)
     {
         case(QBluetoothDeviceDiscoveryAgent::PoweredOffError):
-        {
             setError(tr("The Bluetooth adaptor is powered off."));
             break;
-        }
         case(QBluetoothDeviceDiscoveryAgent::InputOutputError):
-        {
             setError(tr("Writing to or reading from the device resulted in an error."));
             break;
-        }
         case(QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError):
-        {
             setError(tr("Local adapter address does not match the physical adapter address of any local device."));
             break;
-        }
         case(QBluetoothDeviceDiscoveryAgent::UnsupportedPlatformError):
-        {
             setError(tr("Device discovery is not possible or implemented on the current platform."));
             break;
-        }
         case(QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod):
-        {
             setError(tr("Requested discovery methods is not supported by the current platform."));
             break;
-        }
-        default: {
+        default:
             setError(tr("An unknown error has occurred."));
-        }
     }
 }

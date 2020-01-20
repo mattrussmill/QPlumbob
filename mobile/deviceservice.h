@@ -15,7 +15,6 @@ class DeviceService : public BluetoothBase
     Q_OBJECT
 
     Q_PROPERTY(bool alive READ alive NOTIFY aliveChanged)
-    Q_PROPERTY(int availableRegions READ availableRegions NOTIFY availableRegionsChanged)
     Q_PROPERTY(int timeoutRemaining READ timeoutRemaining WRITE setTimeout)
 
     Q_PROPERTY(int pelvisDutyCycle READ pelvisDutyCycle WRITE setPelvisDutyCyckle NOTIFY pelvisDutyCycleChanged)
@@ -28,7 +27,6 @@ public:
 
     void setDevice(Device *device);
     bool alive() const;
-    int availableRegions() const;
     int timeoutRemaining() const; //TODO do I need a function for service discovery?
 
     int pelvisDutyCycle() const;
@@ -44,12 +42,11 @@ public slots:
     void setPelvisDutyCyckle(int percent);
     void setGluteusDutyCyckle(int percent);
     void setTimeout(int minutes);
-    void queryGarmentService(); // TODO use this at init to get init values if disconnected and reconnected.
+    void queryGarmentService();
     void queryDeviceVersionInfo();
 
 signals:
     void aliveChanged();
-    void availableRegionsChanged();
     void safetyTimeoutChanged();
     void reportErrorToUser(QString);
 
@@ -61,7 +58,7 @@ signals:
 private slots:
     void serviceDiscovered(const QBluetoothUuid &);
     void serviceStateChanged(QLowEnergyService::ServiceState state);
-    void serviceError(QLowEnergyService::ServiceError newError);
+    void serviceError(QLowEnergyService::ServiceError error);
     void serviceScanFinished();
     void updateGarmentCharacteristic(const QLowEnergyCharacteristic &characteristic, const QByteArray &value);
 

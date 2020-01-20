@@ -6,6 +6,10 @@ ApplicationWindow {
     visible: true
     title: qsTr('MacoSpanks')
 
+    Component.onCompleted: {
+        deviceService.onAliveChanged.connect(() => console.log('ALIVE CHANGED')) //TODO add function to push menu
+    }
+
     header: TitleBar {
         id: titleBar
         Component.onCompleted: {
@@ -13,6 +17,11 @@ ApplicationWindow {
             backButtonClicked.connect(scanService.stopScan)
             backButtonClicked.connect(deviceService.disconnectDevice)
         }
+        Material.background: deviceService.alive ? 'blue' : 'red' //TODO remove - used for testing
+    }
+
+    function loadGarmentMenu(){
+        console.log('LOAD GARMENT MENU');
     }
 
     StackView {
@@ -20,26 +29,11 @@ ApplicationWindow {
         initialItem: deviceListComponent
         anchors.fill: parent
 
-//        Component.onCompleted: {
-//            deviceService.onAliveChanged.connect(() => {
-//                                                     console.log('@@@@@@@@@@@@@@@@@@')
-//                                       if(deviceService.alive)
-//                                          console.log('CONNECTED')
-//                                       else
-//                                           console.log('DISCONNECTED')
-//                                               } )
-//        }
-
         Component {
             id: deviceListComponent
 
             DeviceList {
                 id: deviceList
-
-                Component.onCompleted: {
-                    titleBar.backButtonClicked.connect(unselectDevices)
-                    //deviceConnected.connect(() => stack.push(selectedGarmentComponent))
-                }
             }
         }
 
@@ -48,7 +42,7 @@ ApplicationWindow {
 
             GarmentMenu {
                 id: selectedGarment
-                //push 'on alive changed'
+                //TODO push 'on alive changed'
             }
         }
     }

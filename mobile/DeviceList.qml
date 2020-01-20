@@ -68,8 +68,6 @@ Item {
             connectClicked.connect(scanService.stopScan)
             connectClicked.connect(list.connectToDevice)
             scanService.startScan()
-            //connectClicked.connect(deviceConnected) //@TODO temporary
-
         }
     }
 }
