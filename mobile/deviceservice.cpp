@@ -93,9 +93,8 @@ void DeviceService::disconnectServices()
     {
         delete m_garmentService;
         m_garmentService = nullptr;
+        emit aliveChanged();
     }
-
-    emit aliveChanged();
 }
 
 void DeviceService::serviceScanFinished()
@@ -145,18 +144,20 @@ void DeviceService::serviceStateChanged(QLowEnergyService::ServiceState state)
 {
     switch(state)
     {
-        case QLowEnergyService::InvalidService :
+        case QLowEnergyService::InvalidService:
             setInfo(tr("Service State: Invalid service - connection may have been lost."));
             break;
-        case QLowEnergyService::DiscoveryRequired :
+        case QLowEnergyService::DiscoveryRequired:
             setInfo(tr("Service State: Service discovery required."));
             break;
-        case QLowEnergyService::DiscoveringServices :
+        case QLowEnergyService::DiscoveringServices:
             setInfo(tr("Service State: Discovering services."));
             break;
-        case QLowEnergyService::ServiceDiscovered :
+        case QLowEnergyService::ServiceDiscovered:
             setInfo(tr("Service State: Service discovered."));
             break;
+        default:
+            setInfo(tr("Service State: Untracked state occured."));
     }
     emit aliveChanged();
 }
@@ -165,24 +166,26 @@ void DeviceService::serviceError(QLowEnergyService::ServiceError error)
 {
     switch(error)
     {
-        case QLowEnergyService::OperationError :
+        case QLowEnergyService::OperationError:
             setError(tr("An operation was attempted while the service was not ready."));
             break;
-        case QLowEnergyService::CharacteristicReadError :
+        case QLowEnergyService::CharacteristicReadError:
             setError(tr("An attempt to read a characteristic value failed."));
             break;
-        case QLowEnergyService::CharacteristicWriteError :
+        case QLowEnergyService::CharacteristicWriteError:
             setError(tr("An attempt to write a new value to a characteristic failed."));
             break;
-        case QLowEnergyService::DescriptorReadError :
+        case QLowEnergyService::DescriptorReadError:
             setError(tr("An attempt to read a descriptor value failed. "));
             break;
-        case QLowEnergyService::DescriptorWriteError :
+        case QLowEnergyService::DescriptorWriteError:
             setError(tr("An attempt to write a new value to a descriptor failed."));
             break;
-        case QLowEnergyService::UnknownError :
+        case QLowEnergyService::UnknownError:
             setError(tr("An unknown error occurred when interacting with the service."));
             break;
+        default:
+            setError(tr("An untracked error occured."));
     }
 }
 

@@ -15,6 +15,7 @@ Item {
         id: slider
         anchors.bottom: parent.bottom
         width: parent.width
+        to: 100
     }
 
 }
