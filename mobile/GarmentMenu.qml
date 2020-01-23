@@ -8,13 +8,19 @@ Item {
         anchors.fill: parent
 
         Garment {
-            id: front
-            regionName: 'front'
+            id: frontRegion
+            regionName: 'Pelvis'
+            onValueChanged: {
+                deviceService.setPelvisDutyCyckle(value)
+            }
         }
 
         Garment {
-            id: rear
-            regionName: 'rear'
+            id: rearRegion
+            regionName: 'Gluteus'
+            onValueChanged: {
+                deviceService.setGluteusDutyCyckle(value)
+            }
         }
 
     }

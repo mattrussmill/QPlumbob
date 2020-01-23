@@ -7,6 +7,6 @@
         <file>DeviceListDelegate.qml</file>
         <file>GarmentMenu.qml</file>
         <file>Garment.qml</file>
-        <file>RegionSlider.qml</file>
+        <file>GarmentSlider.qml</file>
     </qresource>
 </RCC>

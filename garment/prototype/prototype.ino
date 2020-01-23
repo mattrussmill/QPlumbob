@@ -7,6 +7,9 @@
 #define PELVIS_PIN 10
 #define GLUTEUS_PIN 11
 
+// macros
+#define TO_PWM(V) static_cast<unsigned char> round(2.55 * V)
+
 // BLE Heating PWM Service
 BLEService garmentService(DevInfo::GARMENT_SERVICE);
 
@@ -21,18 +24,18 @@ void setup()
   // initialize serial communication
   Serial.begin(9600);
 
-  
+
   // initialize I/O
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
-  
+
   pinMode(PELVIS_PIN, OUTPUT);
   analogWrite(PELVIS_PIN, 0);
-  
+
   pinMode(GLUTEUS_PIN, OUTPUT);
   analogWrite(GLUTEUS_PIN, 0);
 
-  
+
   // initialize BLE module
   if (!BLE.begin())
   {
@@ -40,7 +43,7 @@ void setup()
     while (1);
   }
 
-  
+
   /* setup BLE characteristics */
   // set initial state to -1; timer disabled
   timerCharacteristic.writeValue(-1);
@@ -56,7 +59,7 @@ void setup()
   garmentService.addCharacteristic(pelvisCharacteristic);
   garmentService.addCharacteristic(gluteusCharacteristic);
 
-  
+
   // setup BLE module
   BLE.addService(garmentService);
   BLE.setAdvertisedService(garmentService);     // @TODO is this necessary? Can I not advertise the service?
@@ -69,16 +72,16 @@ void setup()
   // set callback functions for events
   BLE.setEventHandler(BLEConnected, bleConnectedHandler);
   BLE.setEventHandler(BLEDisconnected, bleDisconnectedHandler);
-  pelvisCharacteristic.setEventHandler(BLEWritten, pwmWriteHandler);
-  gluteusCharacteristic.setEventHandler(BLEWritten, pwmWriteHandler);
-  
+  pelvisCharacteristic.setEventHandler(BLEWritten, pelvisWriteHandler);
+  gluteusCharacteristic.setEventHandler(BLEWritten, gluteusWriteHandler);
+
   // finish initialization
   BLE.advertise();                              // start advertising
   Serial.println("Initialization complete... advertising");
 }
 
 
-void loop() 
+void loop()
 {
   // put your main code here, to run repeatedly:
   BLE.poll();
@@ -92,19 +95,17 @@ void timeoutWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 }
 
 
-void pwmWriteHandler(BLEDevice central, BLECharacteristic characteristic)
+void pelvisWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
-  if(memcmp(characteristic.uuid(), DevInfo::PELVIS_PWM_CHARACTERISTIC,
-            sizeof(DevInfo::PELVIS_PWM_CHARACTERISTIC)) == 0)
-  {
-    // TODO set analog pin
-  }
-  else if(memcmp(characteristic.uuid(), DevInfo::PELVIS_PWM_CHARACTERISTIC,
-            sizeof(DevInfo::PELVIS_PWM_CHARACTERISTIC)) == 0)
-  {
-    // TODO set analog pin
-  }
-  //TODO
+  Serial.print("Pelvis Written: ");
+  Serial.println(TO_PWM(pelvisCharacteristic.value()), DEC);
+}
+
+
+void gluteusWriteHandler(BLEDevice central, BLECharacteristic characteristic)
+{
+  Serial.print("Gluteus Written: ");
+  Serial.println(TO_PWM(gluteusCharacteristic.value()), DEC);
 }
 
 

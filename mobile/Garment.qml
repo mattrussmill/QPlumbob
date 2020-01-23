@@ -5,6 +5,7 @@ import QtQuick.Controls 2.12
 Item {
     id: root
     property string regionName
+    readonly property int value: thermostat.value
 
     ColumnLayout {
         anchors.fill: parent
@@ -31,10 +32,8 @@ Item {
 
         }
 
-        //create Item for Sliders, also need a status - maybe other side from slider 'success / failed & reset'
-        //these will be responsible with communicating with the layer that communicates with the device via properties
-        //propogated through
-        RegionSlider {
+        GarmentSlider {
+            id: thermostat
             Layout.fillWidth: true
 
         }
