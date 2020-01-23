@@ -4,11 +4,11 @@
 #include "U:/miller/Documents/MacoSpanks/deviceidentifiers.h" // must use absolute path arduino IDE
 
 // nano 33 PWM duty cycle: 490 Hz (pins 5 and 6: 980 Hz)
-#define PELVIS_PIN 10
-#define GLUTEUS_PIN 11
+#define PELVIS_PIN 9
+#define GLUTEUS_PIN 10
 
 // macros
-#define TO_PWM(V) static_cast<unsigned char> round(2.55 * V)
+#define TO_PWM(V) static_cast<int> round(2.55 * V)
 
 // BLE Heating PWM Service
 BLEService garmentService(DevInfo::GARMENT_SERVICE);
@@ -97,13 +97,16 @@ void timeoutWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 
 void pelvisWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
+  analogWrite(PELVIS_PIN, TO_PWM(pelvisCharacteristic.value()));
   Serial.print("Pelvis Written: ");
   Serial.println(TO_PWM(pelvisCharacteristic.value()), DEC);
+  
 }
 
 
 void gluteusWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
+  analogWrite(GLUTEUS_PIN, TO_PWM(gluteusCharacteristic.value()));
   Serial.print("Gluteus Written: ");
   Serial.println(TO_PWM(gluteusCharacteristic.value()), DEC);
 }
