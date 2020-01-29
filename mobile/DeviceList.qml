@@ -19,6 +19,8 @@ Item {
             deviceName: modelData.name
             deviceAddress: modelData.address
             delegateIndex: index
+            delegateKnown: modelData.known
+            delegateAvailable: modelData.known ? modelData.available : true
             selectedDelegateInList: list.selectedIndex //use property binding to deselect items
             Component.onCompleted: {
                 deviceSelected.connect(list.setSelectedDevice)

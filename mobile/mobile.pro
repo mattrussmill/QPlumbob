@@ -17,14 +17,16 @@ HEADERS += \
     bluetoothbase.h \
     device.h \
     deviceservice.h \
-    scanservice.h
+    scanservice.h \
+    usersettingsservice.h
 
 SOURCES += \
         bluetoothbase.cpp \
         device.cpp \
         deviceservice.cpp \
         main.cpp \
-        scanservice.cpp
+        scanservice.cpp \
+        usersettingsservice.cpp
 
 RESOURCES += \
     qml.qrc \

@@ -23,7 +23,7 @@ public:
     int timeout() const;
     void setTimeout(int timeout);
     void setDeviceService(DeviceService *deviceService);
-    QVariant devices(); //automatically converted to JS list
+    QVariant devices() const; //automatically converted to JS list
 
 public slots:
     void startScan();

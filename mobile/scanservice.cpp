@@ -33,7 +33,7 @@ ScanService::~ScanService()
     m_devices.clear();
 }
 
-QVariant ScanService::devices()
+QVariant ScanService::devices() const
 {
     return QVariant::fromValue(m_devices);
 }

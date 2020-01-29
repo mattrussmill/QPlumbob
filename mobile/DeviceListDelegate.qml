@@ -1,5 +1,6 @@
 import QtQuick 2.12
 import QtQuick.Controls 2.12
+import QtQuick.Extras 1.4
 
 ItemDelegate {
     id: root
@@ -9,6 +10,8 @@ ItemDelegate {
     property string deviceName
     property string deviceAddress
     property bool expanded: false
+    property bool delegateAvailable
+    property bool delegateKnown
     property int delegateIndex
     property int selectedDelegateInList
 
@@ -21,23 +24,40 @@ ItemDelegate {
         }
     }
 
-    Column {
-        id: column
+    Row {
+        id: row
         anchors.fill: parent
-        Label {
-            id: name
-            text: deviceName ? deviceName : qsTr('Device Name Unavailable ') + delegateIndex
-            font.pointSize: 16
+
+        StatusIndicator {
+            id: indicator
+            anchors.centerIn: parent.verticalCenter
+            anchors.left: parent.left
+            active: delegateAvailable
+            color: delegateKnown ? "green" : "orange"
         }
 
-        Label {
-            id: details
-            visible: opacity !== 0
-            opacity: root.expanded ? 1 : 0.0
-            text: deviceAddress
-            font.pointSize: 14
-            Behavior on opacity {
-                NumberAnimation { duration: 200}
+        Column {
+            id: column
+            anchors.left: indicator.right
+            anchors.top: row.top
+            anchors.bottom: row.bottom
+            anchors.right: row.right
+
+            Label {
+                id: name
+                text: deviceName ? deviceName : qsTr('Device Name Unavailable ') + delegateIndex
+                font.pointSize: 16
+            }
+
+            Label {
+                id: details
+                visible: opacity !== 0
+                opacity: root.expanded ? 1 : 0.0
+                text: deviceAddress
+                font.pointSize: 14
+                Behavior on opacity {
+                    NumberAnimation { duration: 200}
+                }
             }
         }
     }

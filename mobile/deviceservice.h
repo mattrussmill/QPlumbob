@@ -70,7 +70,7 @@ private:
 
     QLowEnergyController *m_control = nullptr;
     QLowEnergyService *m_garmentService = nullptr;
-    QLowEnergyDescriptor m_notificationDesc;
+    //QLowEnergyDescriptor m_notificationDesc; //TODO implement this
     Device *m_device = nullptr;
     bool m_foundGarmentService = false;
 
