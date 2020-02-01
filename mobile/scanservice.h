@@ -5,8 +5,9 @@
 #include <QVariant>
 #include <QBluetoothDeviceDiscoveryAgent>
 #include <QBluetoothDeviceInfo>
-#include "bluetoothbase.h"
-#include "deviceservice.h"
+#include <bluetoothbase.h>
+class DeviceService;
+class UserSettingsService;
 
 class ScanService : public BluetoothBase
 {
@@ -18,6 +19,7 @@ class ScanService : public BluetoothBase
 public:
     ScanService(QObject *parent = nullptr);
     ScanService(DeviceService *deviceService, QObject *parent = nullptr);
+    ScanService(DeviceService *deviceService, UserSettingsService *userSettings, QObject *parent = nullptr);
     ~ScanService();
     bool scanning() const;
     int timeout() const;
@@ -39,12 +41,15 @@ private slots:
     void addDevice(const QBluetoothDeviceInfo&);
     void scanError(QBluetoothDeviceDiscoveryAgent::Error error);
     void scanFinished();
+    void handleKnownDeviceConflict(const QString &id);
 
 private:
+    void initializeDeviceList();
     int m_timeout = 10000;
     QList<QObject*> m_devices;
     QBluetoothDeviceDiscoveryAgent *m_deviceDiscoveryAgent;
-    DeviceService *m_deviceService;
+    DeviceService *m_deviceService = nullptr;
+    UserSettingsService *m_userSettings = nullptr;
 };
 
 #endif // SCANSERVICE_H
