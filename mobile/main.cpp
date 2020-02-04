@@ -2,6 +2,7 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include "scanservice.h"
+#include "deviceservice.h"
 #include "usersettingsservice.h"
 
 int main(int argc, char *argv[])
@@ -12,7 +13,7 @@ int main(int argc, char *argv[])
 
     UserSettingsService userSettings;
     DeviceService deviceService;
-    ScanService scanService(&deviceService);
+    ScanService scanService(&deviceService, &userSettings);
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("userSettings", &userSettings);

@@ -5,12 +5,12 @@
 #include <QJsonArray>
 #include "device.h"
 
-UserSettingsService::UserSettingsService(QObject *parent) : QObject(parent)
+UserSettingsService::UserSettingsService(QObject *parent) : BluetoothBase(parent)
 {
     QString path = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
     if(path.isEmpty())
     {
-        qCritical() << tr("Configuration file location inaccessible, no writeable location.");
+        setError(tr("Configuration file location inaccessible, no writeable location."));
         return;
     }
 
@@ -18,11 +18,11 @@ UserSettingsService::UserSettingsService(QObject *parent) : QObject(parent)
     m_configFile = new QFile(path, this);
     if(!m_configFile->exists())
     {
-        qWarning() << tr("Settings do not yet exist, using defualt settings.");
+        setError(tr("Settings do not yet exist, using defualt settings."));
     }
     else if (!m_configFile->open(QFile::ReadOnly))
     {
-        qWarning() << tr("Failed to open configuration file.");
+        setError(tr("Failed to open configuration file."));
     }
     else
     {
@@ -36,15 +36,15 @@ UserSettingsService::UserSettingsService(QObject *parent) : QObject(parent)
                 for(QJsonArray::iterator i = m_settings["devices"].toArray().begin();
                     i!= m_settings["devices"].toArray().end(); ++i)
                 {
-                    m_lookupCounter.insert(i->toObject()["address"].toString(), false);
+                    m_lookupCounter.insert(i->toObject()["address"].toString(), DeviceDisabled);
                 }
             }
 
-            qInfo() << tr("Application settings loaded.");
+            setInfo(tr("Application settings loaded."));
         }
         else
         {
-            qWarning() << error.errorString();
+            setError(error.errorString());
         }
         m_configFile->close();
     }
@@ -86,7 +86,7 @@ void UserSettingsService::addDevice(const Device &device)
         {
             if (i->toObject()["address"] == device.getAddress())
             {
-                qWarning() << tr("Cannot add device to list, duplicate device.");
+                setError(tr("Cannot add device to list, duplicate device."));
                 return;
             }
         }
@@ -99,7 +99,7 @@ void UserSettingsService::addDevice(const Device &device)
         m_settings["devices"].toArray().append(newDevice);
 
         //Add to checked list for QML ListView saved device
-        m_lookupCounter.insert(device.getAddress(), false);
+        m_lookupCounter.insert(device.getAddress(), DeviceEnabled);
 
         emit devicesChanged();
         m_changesPending = true;
@@ -123,7 +123,7 @@ void UserSettingsService::removeDevice(const Device &device)
 
                 emit devicesChanged();
                 m_changesPending = true;
-                qInfo() << tr("Device removed from saved devices.");
+                setInfo(tr("Device removed from saved devices."));
                 return;
             }
         }
@@ -136,37 +136,43 @@ void UserSettingsService::writeChanges()
     {
         if (!m_configFile->open(QFile::WriteOnly))
         {
-               qWarning() << tr("Could not save application settings.");
+               setError(tr("Could not save application settings."));
                return;
         }
         m_configFile->write(QJsonDocument(m_settings).toJson());
         m_changesPending = false;
-        qInfo() << tr("Application settings saved.");
+        setInfo(tr("Application settings saved."));
     }
 }
 
 void UserSettingsService::resetCheckedDevices()
 {
-    for (QMap<QString, bool>::iterator i = m_lookupCounter.begin();
+    for (QMap<QString, DeviceLoadedStatus>::iterator i = m_lookupCounter.begin();
          i != m_lookupCounter.end(); ++i)
     {
-        i.value() = false;
+        i.value() = DeviceDisabled;
     }
 }
 
-int UserSettingsService::checkDevice(const QString &id) //TODO change to use enums
+UserSettingsService::DeviceLoadedStatus UserSettingsService::checkDevice(const QString &id)
 {
-    if (getDeviceById(id).isEmpty() || !m_lookupCounter.contains(id))
-        return UnfamiliarDevice;
+    if(m_lookupCounter.isEmpty() || !m_lookupCounter.contains(id))
+        return DeviceUnknown;
 
-    if (!m_lookupCounter[id])
+    switch(m_lookupCounter[id])
     {
-        m_lookupCounter[id] = true;
-        return NoDeviceConflict;
+        case DeviceDisabled:
+            // mark as enabled, return that device in list should be enabled
+            m_lookupCounter[id] = DeviceEnabled;
+            return DeviceEnabled;
+        case DeviceEnabled:
+            // mark as unknown for future scans until conflict resolved, report conflict to be resolved
+            m_lookupCounter[id] = DeviceUnknown;
+            return DeviceConflict;
+        default:
+            // if device had conflict report not known so its status isn't changed until reset occurs
+            return DeviceUnknown;
     }
-
-    emit deviceConflict(id);
-    return DeviceConflict;
 }
 
 QVariantMap UserSettingsService::getDeviceById(const QString &id)
@@ -178,12 +184,12 @@ QVariantMap UserSettingsService::getDeviceById(const QString &id)
         {
             if (i->toObject()["address"] == id)
             {
-                qInfo() << tr("Device iterator found in settings JSON object.");
+                setInfo(tr("Device iterator found in settings JSON object."));
                 return i->toObject().toVariantMap();
             }
         }
     }
-    qWarning() << tr("Device iterator not found.");
+    setError(tr("Device iterator not found."));
     return QVariantMap();
 
     // TODO this will be used in QML side. If device is known and available, will return saved device info for pin.

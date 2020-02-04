@@ -5,7 +5,8 @@
 #include <QVariant>
 #include <QBluetoothDeviceDiscoveryAgent>
 #include <QBluetoothDeviceInfo>
-#include <bluetoothbase.h>
+#include "bluetoothbase.h"
+class Device;
 class DeviceService;
 class UserSettingsService;
 
@@ -41,7 +42,7 @@ private slots:
     void addDevice(const QBluetoothDeviceInfo&);
     void scanError(QBluetoothDeviceDiscoveryAgent::Error error);
     void scanFinished();
-    void handleKnownDeviceConflict(const QString &id);
+    Device* findDeviceById(const QString &id);
 
 private:
     void initializeDeviceList();

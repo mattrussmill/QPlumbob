@@ -12,6 +12,12 @@ Device::Device(const QBluetoothDeviceInfo &device, QObject *parent) :
 
 }
 
+Device::Device(const QBluetoothDeviceInfo &device, bool available, bool known, QObject *parent) :
+    QObject(parent), m_device(device), m_available(available), m_known(known)
+{
+
+}
+
 void Device::setDevice(const QBluetoothDeviceInfo &device)
 {
     m_device = device;
@@ -40,16 +46,23 @@ bool Device::isAvailable() const
 
 bool Device::isKnown() const
 {
-    return false; // TODO
+    return m_known;
 }
 
-void Device::setAvailable(bool available)
+void Device::setAvailable(bool deviceAvailable)
 {
-    m_available = available;
-    emit availabilityChanged();
+    if (deviceAvailable != m_available)
+    {
+        m_available = deviceAvailable;
+        emit availabilityChanged();
+    }
 }
 
-void Device::setKnown(bool cached)
+void Device::setKnown(bool deviceKnown)
 {
-    // TODO
+    if (deviceKnown != m_known)
+    {
+        m_known = deviceKnown;
+        emit knownChanged();
+    }
 }

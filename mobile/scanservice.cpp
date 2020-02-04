@@ -32,13 +32,12 @@ ScanService::ScanService(DeviceService *deviceService, QObject *parent) :
 }
 
 ScanService::ScanService(DeviceService *deviceService, UserSettingsService *userSettings, QObject *parent) :
-    BluetoothBase(parent), m_userSettings(userSettings), m_deviceService(deviceService)
+    BluetoothBase(parent), m_deviceService(deviceService), m_userSettings(userSettings)
 {
     m_deviceDiscoveryAgent = new QBluetoothDeviceDiscoveryAgent(this);
     m_deviceDiscoveryAgent->setLowEnergyDiscoveryTimeout(m_timeout);
 
     connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered, this, &ScanService::addDevice);
-    connect(m_userSettings, &UserSettingsService::deviceConflict, this, &ScanService::handleKnownDeviceConflict);
     connect(m_deviceDiscoveryAgent, static_cast<void (QBluetoothDeviceDiscoveryAgent::*)(QBluetoothDeviceDiscoveryAgent::Error)>(&QBluetoothDeviceDiscoveryAgent::error),
             this, &ScanService::scanError);
     connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::finished, this, &ScanService::scanFinished);
@@ -65,14 +64,51 @@ void ScanService::addDevice(const QBluetoothDeviceInfo &device)
 {
     if (device.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
 
-        int result = m_userSettings->checkDevice(device.address().toString());
+        if (m_userSettings)
+        {
+            Device *d, *tmp;
+            switch(m_userSettings->checkDevice(device.address().toString()))
+            {
+                case UserSettingsService::DeviceConflict: //DeviceUnknown
+                    // find first device and set the new device to it as an active, unknown device
+                    d = findDeviceById(device.address().toString());
+                    if (d)
+                    {   tmp = d;
+                        d = new Device(device, true, false);
+                        delete tmp;
+                        setInfo(device.name() + tr(" created a device conflict during scan, but it was resolved."));
+                    }
+                    else
+                    {
+                        setError(device.name() + tr(" could not be found to resolve search conflict."));
+                    }
+                    break;
+                case UserSettingsService::DeviceEnabled: //DeviceKnown
+                    // find first device and set known device as available
+                    d = findDeviceById(device.address().toString());
+                    if (d)
+                    {
+                        tmp = d;
+                        d = new Device(device, true, true);
+                        delete tmp;
+                        setInfo(device.name() + tr(" marked available as a known device."));
+                    }
+                    else
+                    {
+                        setError(device.name() + tr(" could not enabled as a known device."));
+                    }
+                    break;
+                default: // UserSettingsService::DeviceUnknown
+                    // append unrecognized device to list as available and unknown
+                    m_devices.append(new Device(device));
+                    break;
+            }
+        }
+        else
+        {
+            m_devices.append(new Device(device));
+        }
 
-
-        Device *d = new Device(device);
-
-        // TODO check device here if in saved list. If in saved list
-
-        m_devices.append(new Device(device));
         setInfo(tr("Low Energy device " + device.name().toLatin1() + " found."));
         emit devicesChanged();
     }
@@ -182,41 +218,44 @@ void ScanService::scanError(QBluetoothDeviceDiscoveryAgent::Error error)
     }
 }
 
-void ScanService::handleKnownDeviceConflict(const QString &id)
-{
-    if (m_userSettings == nullptr)
-        return;
-
-    for (QList<QObject*>::iterator d = m_devices.begin(); d != m_devices.end(); ++d){
-        if(qobject_cast<Device*>(*d)->getAddress() == id && qobject_cast<Device*>(*d)->isKnown())
-        {
-            qobject_cast<Device*>(*d)->setKnown(false);
-            return;
-        }
-    }
-}
-
 void ScanService::initializeDeviceList()
 {
     qDeleteAll(m_devices);
     m_devices.clear();
 
-    if(m_userSettings)
+    if (m_userSettings)
     {
         m_userSettings->resetCheckedDevices();
 
-        QBluetoothDeviceInfo device;
+        // add saved devices to initial list as known but unavailable
         QVariantList savedDevices = m_userSettings->devices().toList();
-        for(QVariantList::iterator i = savedDevices.begin(); i != savedDevices.end(); ++i)
+        for (QVariantList::iterator i = savedDevices.begin(); i != savedDevices.end(); ++i)
         {
-            device = QBluetoothDeviceInfo(
-                        QBluetoothAddress(i->toMap()["address"].toString()),
-                        i->toMap()["name"].toString(),
-                        0);
-            device.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
-            m_devices.append(new Device(device));
+            setInfo(tr("Saved device added to initialized scan service list: ") + i->toMap()["name"].toString());
+            m_devices.append(new Device(
+                                    QBluetoothDeviceInfo(
+                                        QBluetoothAddress(i->toMap()["address"].toString()),
+                                            i->toMap()["name"].toString(),
+                                            0),
+                                    false,
+                                    true));
         }
     }
 
     emit devicesChanged();
+}
+
+Device* ScanService::findDeviceById(const QString &id)
+{
+    Device *device;
+    for (int i = 0; i < m_devices.length(); i++)
+    {
+        // find first in list
+        device = qobject_cast<Device*>(m_devices[i]);
+        if(device->getAddress() == id){
+            setInfo(device->getName() + tr(" was found in the scan list."));
+            return device;
+        }
+    }
+    return nullptr;
 }

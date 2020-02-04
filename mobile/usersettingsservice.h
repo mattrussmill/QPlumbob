@@ -1,6 +1,7 @@
 #ifndef USERSETTINGSSERVICE_H
 #define USERSETTINGSSERVICE_H
 
+#include "bluetoothbase.h"
 #include <QObject>
 #include <QVariant>
 #include <QFile>
@@ -10,18 +11,20 @@
 
 class Device;
 
-class UserSettingsService : public QObject
+class UserSettingsService : public BluetoothBase
 {
     Q_OBJECT
     Q_PROPERTY(QVariant devices READ devices NOTIFY devicesChanged)
 
-    enum DeviceCheckStatus
+public:
+    enum DeviceLoadedStatus
     {
-        UnfamiliarDevice,
-        NoDeviceConflict,
+        DeviceUnknown,
+        DeviceEnabled,
+        DeviceDisabled,
         DeviceConflict
     };
-public:
+
     explicit UserSettingsService(QObject *parent = nullptr);
     ~UserSettingsService();
     QVariant devices() const; //automatically converted to JS list
@@ -33,7 +36,7 @@ public slots:
     QVariantMap getDeviceById(const QString &id);
 
     void resetCheckedDevices();
-    int checkDevice(const QString &id);
+    DeviceLoadedStatus checkDevice(const QString &id);
 
 signals:
     void devicesChanged();
@@ -43,7 +46,7 @@ private:
     bool m_changesPending = false;
     QFile *m_configFile = nullptr;
     QJsonObject m_settings;
-    QMap<QString, bool> m_lookupCounter; //load on startup or on insert
+    QMap<QString, DeviceLoadedStatus> m_lookupCounter; //load on startup or on insert
 
 };
 
