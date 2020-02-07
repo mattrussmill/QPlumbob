@@ -12,10 +12,14 @@ ApplicationWindow {
             backButtonClicked.connect(stack.pop)
             backButtonClicked.connect(scanService.stopScan)
             backButtonClicked.connect(deviceService.disconnectDevice)
-
-            //console.log(userSettings.devices[1]["name"]) //used for testing
+            menuButtonClicked.connect(settings.open)
         }
         Material.background: deviceService.alive ? 'blue' : 'red' //TODO remove - used for testing
+    }
+
+    SettingsMenu {
+        id: settings
+        x: parent.width - settings.width
     }
 
     StackView {

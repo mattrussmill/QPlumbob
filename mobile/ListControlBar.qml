@@ -11,7 +11,8 @@ ToolBar {
     ToolButton {
         id: scanButton
         anchors.left: parent.left
-        anchors.fill: parent.height
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
         width: parent.width / 2
         text: qsTr('Scan')
         enabled: scanEnabled
@@ -22,7 +23,8 @@ ToolBar {
         id: connectButton
         anchors.right: parent.right
         anchors.left: scanButton.right
-        anchors.fill: parent.height
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
         text: qsTr('Connect')
         enabled: connectEnabled
         onClicked: connectClicked()

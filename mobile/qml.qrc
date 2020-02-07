@@ -8,5 +8,6 @@
         <file>GarmentMenu.qml</file>
         <file>Garment.qml</file>
         <file>GarmentSlider.qml</file>
+        <file>SettingsMenu.qml</file>
     </qresource>
 </RCC>
