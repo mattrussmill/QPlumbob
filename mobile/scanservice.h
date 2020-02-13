@@ -37,12 +37,13 @@ signals:
     void scanningChanged();
     void devicesChanged();
     void deviceLookupError();
+    void scanStarted();
 
 private slots:
     void addDevice(const QBluetoothDeviceInfo&);
     void scanError(QBluetoothDeviceDiscoveryAgent::Error error);
     void scanFinished();
-    Device* findDeviceById(const QString &id);
+    int findDeviceById(const QString &id);
 
 private:
     void initializeDeviceList();

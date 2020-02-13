@@ -30,18 +30,14 @@ ItemDelegate {
 
         StatusIndicator {
             id: indicator
-            anchors.centerIn: parent.verticalCenter
-            anchors.left: parent.left
+            anchors.centerIn: parent.Center
             active: delegateAvailable
             color: delegateKnown ? "green" : "orange"
         }
 
         Column {
             id: column
-            anchors.left: indicator.right
-            anchors.top: row.top
-            anchors.bottom: row.bottom
-            anchors.right: row.right
+            anchors.centerIn: parent.Center
 
             Label {
                 id: name

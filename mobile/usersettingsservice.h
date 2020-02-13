@@ -6,15 +6,12 @@
 #include <QVariant>
 #include <QFile>
 #include <QMap>
-#include <QJsonObject>
-
 
 class Device;
 
 class UserSettingsService : public BluetoothBase
 {
     Q_OBJECT
-    Q_PROPERTY(QVariant devices READ devices NOTIFY devicesChanged)
 
 public:
     enum DeviceLoadedStatus
@@ -25,29 +22,33 @@ public:
         DeviceConflict
     };
 
+    struct SavedDevice {
+        QString name;
+        QString address;
+        uint16_t pin;
+        DeviceLoadedStatus status;
+    };
+
     explicit UserSettingsService(QObject *parent = nullptr);
     ~UserSettingsService();
-    QVariant devices() const; //automatically converted to JS list
+    void addToSavedDevices(const Device &device);
+    void removeFromSavedDevices(const Device &device);
+    QMap<QString, SavedDevice> getDevices() const;
 
 public slots:
-    void addDevice(const Device &device);
-    void removeDevice(const Device &device);
+    void addDevice(QObject *device);
+    void removeDevice(QObject *device);
     void writeChanges();
-    QVariantMap getDeviceById(const QString &id);
-
     void resetCheckedDevices();
     DeviceLoadedStatus checkDevice(const QString &id);
 
 signals:
     void devicesChanged();
-    void deviceConflict(const QString &id); //TODO - returns device ID in question, when conflict found remove saved device from list or display conflict (gray out known device) -> ask for pin on connect for devices not recognized
 
 private:
     bool m_changesPending = false;
     QFile *m_configFile = nullptr;
-    QJsonObject m_settings;
-    QMap<QString, DeviceLoadedStatus> m_lookupCounter; //load on startup or on insert
-
+    QMap<QString, SavedDevice> m_savedDevices; //load on startup or on insert
 };
 
 #endif // USERSETTINGSSERVICE_H

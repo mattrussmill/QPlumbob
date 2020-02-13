@@ -6,6 +6,20 @@ Popup {
     id: root
     modal: true
 
+    property int deviceIndex: -1
+    function setSelectedDeviceIndex (index) {
+        deviceIndex = index
+    }
+
+    onDeviceIndexChanged: {
+        if(deviceIndex >= 0)
+            saveCheckbox.checked = scanService.devices[deviceIndex].known
+    }
+
+    onClosed: {
+        userSettings.writeChanges();
+    }
+
     GridLayout {
         id: layout
         anchors.fill: parent
@@ -13,11 +27,26 @@ Popup {
 
         CheckBox {
             id: saveCheckbox
+            enabled: deviceIndex >= 0
 
+            onEnabledChanged: {
+                if(!enabled)
+                    checked = false
+            }
+
+            onCheckedChanged: {
+                if(enabled) {
+                    if (checked)
+                        userSettings.addDevice(scanService.devices[deviceIndex]) // TODO change to only check if connected, but can uncheck on either
+                    else
+                        userSettings.removeDevice(scanService.devices[deviceIndex])
+                }
+            }
         }
 
         Label {
             id: saveLabel
+            enabled: deviceIndex >= 0
             text: "Save Device"
         }
 

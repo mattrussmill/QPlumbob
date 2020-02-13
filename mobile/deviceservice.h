@@ -16,6 +16,7 @@ class DeviceService : public BluetoothBase
 
     Q_PROPERTY(bool alive READ alive NOTIFY aliveChanged)
     Q_PROPERTY(int timeoutRemaining READ timeoutRemaining WRITE setTimeout)
+    Q_PROPERTY(QVariant device READ device NOTIFY deviceChanged)
 
     Q_PROPERTY(int pelvisDutyCycle READ pelvisDutyCycle WRITE setPelvisDutyCyckle NOTIFY pelvisDutyCycleChanged)
     Q_PROPERTY(int gluteusDutyCycle READ gluteusDutyCycle WRITE setGluteusDutyCyckle NOTIFY gluteusDutyCycleChanged)
@@ -27,6 +28,7 @@ public:
 
     void setDevice(Device *device);
     bool alive() const;
+    QVariant device() const;
     int timeoutRemaining() const; //TODO do I need a function for service discovery?
 
     int pelvisDutyCycle() const;
@@ -49,6 +51,7 @@ signals:
     void aliveChanged();
     void safetyTimeoutChanged();
     void reportErrorToUser(QString);
+    void deviceChanged();
 
     void pelvisDutyCycleChanged();
     void pelvisSetDutyCycleFailed();

@@ -56,6 +56,7 @@ void DeviceService::setDevice(Device *device)
 
         m_control->connectToDevice();
     }
+    emit deviceChanged();
 }
 
 void DeviceService::serviceDiscovered(const QBluetoothUuid &gatt)
@@ -187,6 +188,11 @@ void DeviceService::serviceError(QLowEnergyService::ServiceError error)
         default:
             setError(tr("An untracked error occured."));
     }
+}
+
+QVariant DeviceService::device() const
+{
+    return QVariant::fromValue(qobject_cast<QObject *>(m_device));
 }
 
 bool DeviceService::alive() const

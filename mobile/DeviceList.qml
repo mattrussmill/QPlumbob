@@ -5,8 +5,14 @@ import QtQuick.Controls 2.12
 Item {
     id: root
 
+    signal selectedDeviceIndex(int index)
+
     function unselectDevices() {
-        list.selectedIndex = -1
+        list.setSelectedDevice(-1)
+    }
+
+    Component.onCompleted: {
+        scanService.scanStarted.connect(unselectDevices)
     }
 
     ListView {
@@ -26,8 +32,7 @@ Item {
                 deviceSelected.connect(list.setSelectedDevice)
             }
         }
-
-        signal deselectDevices(int index)
+        onSelectedIndexChanged: selectedDeviceIndex(selectedIndex)
 
         function setSelectedDevice(index) {
             selectedIndex = index
@@ -66,7 +71,7 @@ Item {
 
         Component.onCompleted: {
             scanClicked.connect(scanService.startScan)
-            scanClicked.connect(() => list.setSelectedDevice(-1))
+            //scanClicked.connect(() => list.setSelectedDevice(-1))
             connectClicked.connect(scanService.stopScan)
             connectClicked.connect(list.connectToDevice)
             scanService.startScan()

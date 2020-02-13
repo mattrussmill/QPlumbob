@@ -44,6 +44,9 @@ ApplicationWindow {
 
             DeviceList {
                 id: deviceList
+                Component.onCompleted: {
+                    selectedDeviceIndex.connect(settings.setSelectedDeviceIndex)
+                }
             }
         }
 
