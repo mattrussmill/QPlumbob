@@ -38,6 +38,18 @@ QML_IMPORT_PATH =
 # Additional import path used to resolve QML modules just for Qt Quick Designer
 QML_DESIGNER_IMPORT_PATH =
 
+# Android build target specific configuration
+android {
+    message("Android build target selected.")
+
+    QT += androidextras
+
+    DISTFILES += android/AndroidManifest.xml
+
+    ANDROID_PACKAGE_SOURCE_DIR = \
+            $$PWD/android
+}
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin

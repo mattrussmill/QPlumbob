@@ -4,7 +4,7 @@
 #include "bluetoothbase.h"
 #include <QObject>
 #include <QVariant>
-#include <QFile>
+#include <QString>
 #include <QMap>
 
 class Device;
@@ -31,8 +31,8 @@ public:
 
     explicit UserSettingsService(QObject *parent = nullptr);
     ~UserSettingsService();
-    void addToSavedDevices(const Device &device);
-    void removeFromSavedDevices(const Device &device);
+    void addToSavedDevices(Device &device);
+    void removeFromSavedDevices(Device &device);
     QMap<QString, SavedDevice> getDevices() const;
 
 public slots:
@@ -47,7 +47,7 @@ signals:
 
 private:
     bool m_changesPending = false;
-    QFile *m_configFile = nullptr;
+    const QString m_configFile = "/config.json";
     QMap<QString, SavedDevice> m_savedDevices; //load on startup or on insert
 };
 

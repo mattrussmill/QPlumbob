@@ -251,7 +251,6 @@ void ScanService::initializeDeviceList()
 
 int ScanService::findDeviceById(const QString &id)
 {
-    Device *device;
     for (int i = 0; i < m_devices.length(); i++)
     {
         // find first in list

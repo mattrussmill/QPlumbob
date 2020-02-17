@@ -5,13 +5,27 @@
 #include "deviceservice.h"
 #include "usersettingsservice.h"
 
-
+#if defined (Q_OS_ANDROID)
+#include <QtAndroid>
+const QVector<QString> permissions();
+#endif
 
 int main(int argc, char *argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-
     QGuiApplication app(argc, argv);
+
+    #if defined (Q_OS_ANDROID)
+    // request permissions at runtime if not already approved
+
+    // TODO determine if I only need the android manifest file in the android folder or the gradel config as well?
+    // https://amin-ahmadi.com/2015/11/29/how-to-add-permissions-to-your-qt-android-app/
+
+    // TODO Also how to include Qt packages in apk instead of shared through Ministro
+    // https://doc.qt.io/qtcreator/creator-deploying-android.html
+
+    // TODO
+    #endif
 
     UserSettingsService userSettings;
     DeviceService deviceService;

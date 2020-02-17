@@ -1,5 +1,6 @@
 #include "usersettingsservice.h"
 #include <QDebug>
+#include <QFile>
 #include <QStandardPaths>
 #include <QJsonDocument>
 #include <QJsonArray>
@@ -8,28 +9,28 @@
 
 UserSettingsService::UserSettingsService(QObject *parent) : BluetoothBase(parent)
 {
-    QString path = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     if(path.isEmpty())
     {
         setError(tr("Configuration file location inaccessible, no writeable location."));
         return;
     }
 
-    path.append("/config.json");
+    path.append(m_configFile);
     setInfo(tr("Save path set to: ") + path);
-    m_configFile = new QFile(path, this);
-    if(!m_configFile->exists())
+    QFile configFile(path, this);
+    if(!configFile.exists())
     {
         setError(tr("Settings do not yet exist, using defualt settings."));
     }
-    else if (!m_configFile->open(QFile::ReadOnly))
+    else if (!configFile.open(QFile::ReadOnly))
     {
         setError(tr("Failed to open configuration file."));
     }
     else
     {
         QJsonParseError error;
-        QJsonObject jsonLoaded = QJsonDocument::fromJson(m_configFile->readAll(), &error).object();
+        QJsonObject jsonLoaded = QJsonDocument::fromJson(configFile.readAll(), &error).object();
         if(error.error == QJsonParseError::NoError)
         {
             // Load initial keys into lookup counter
@@ -55,7 +56,7 @@ UserSettingsService::UserSettingsService(QObject *parent) : BluetoothBase(parent
         {
             setError(error.errorString());
         }
-        m_configFile->close();
+        configFile.close();
     }
 }
 
@@ -64,13 +65,13 @@ UserSettingsService::~UserSettingsService()
 
 }
 
-void UserSettingsService::addToSavedDevices(const Device &device)
+void UserSettingsService::addToSavedDevices(Device &device)
 {
     if (device.getDevice().isValid())
     {        
         if (m_savedDevices.contains(device.getAddress()))
         {
-            setError(tr("Cannot add device to list, duplicate device."));
+            setError(tr("Cannot add device to list, duplicate device: ") + device.getName());
             return;
         }
 
@@ -81,9 +82,10 @@ void UserSettingsService::addToSavedDevices(const Device &device)
                                   0,
                                   DeviceEnabled
                               });
-
-        emit devicesChanged();
+        device.setKnown(true);
         m_changesPending = true;
+        setInfo(tr("Device added to saved devices: ") + device.getName());
+        emit devicesChanged();
     }
     else
     {
@@ -94,50 +96,46 @@ void UserSettingsService::addToSavedDevices(const Device &device)
 void UserSettingsService::addDevice(QObject *device)
 {
     if (device)
-    {
-        addToSavedDevices(*qobject_cast<const Device*>(device));
-        qobject_cast<Device*>(device)->setKnown(true);
-    }
+        addToSavedDevices(*qobject_cast<Device*>(device));
     else
-    {
         setError("Could not add device to list, device pointer null");
-    }
 }
 
-void UserSettingsService::removeFromSavedDevices(const Device &device)
+void UserSettingsService::removeFromSavedDevices(Device &device)
 {
     m_savedDevices.remove(device.getAddress());
-    emit devicesChanged();
+    device.setKnown(false);
     m_changesPending = true;
-    setInfo(tr("Device removed from saved devices."));
+    setInfo(tr("Device removed from saved devices: ") + device.getName());
+    emit devicesChanged();
 }
 
 void UserSettingsService::removeDevice(QObject *device)
 {
     if (device)
-    {
-        removeFromSavedDevices(*qobject_cast<const Device*>(device));
-        qobject_cast<Device*>(device)->setKnown(false);
-    }
+        removeFromSavedDevices(*qobject_cast<Device*>(device));
     else
-    {
         setError("Could not remove device from list, device pointer null");
-    }
 }
 
-void UserSettingsService::writeChanges() // TODO call this
+void UserSettingsService::writeChanges()
 {
-    if (!m_configFile)
-    {
-        setError(tr("Could not access config file, changes not saved."));
-        return;
-    }
-
     if (m_changesPending)
     {
-        if (!m_configFile->open(QFile::WriteOnly))
+        QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+        if(path.isEmpty())
         {
-               setError(tr("Could not save application settings."));
+            setError(tr("Configuration file location inaccessible, no writeable location."));
+            return;
+        }
+
+        path.append(m_configFile);
+        setInfo(tr("Save path set to: ") + path);
+        QFile configFile(path, this);
+
+        if (!configFile.open(QFile::WriteOnly))
+        {
+               setError(tr("Could not open file to save settings: ") + configFile.errorString());
                return;
         }
 
@@ -157,8 +155,8 @@ void UserSettingsService::writeChanges() // TODO call this
         // write to file
         QJsonObject settings;
         settings.insert("devices", devices);
-        m_configFile->write(QJsonDocument(settings).toJson());
-        m_configFile->close();
+        configFile.write(QJsonDocument(settings).toJson());
+        configFile.close();
         m_changesPending = false;
         setInfo(tr("Application settings saved."));
     }
