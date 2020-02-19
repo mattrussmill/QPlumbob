@@ -31,7 +31,9 @@ public:
 public slots:
     void startScan();
     void stopScan();
-    void connectToDevice(const QString &address); //@TODO make Q_INVOKABLE?
+    void connectToDevice(const QString &address);
+    void saveDevice(int index);
+    void forgetDevice(int index);
 
 signals:
     void scanningChanged();

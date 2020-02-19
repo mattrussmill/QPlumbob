@@ -232,14 +232,14 @@ void ScanService::initializeDeviceList()
     {
         m_userSettings->resetCheckedDevices();
 
-        for (QMap<QString, UserSettingsService::SavedDevice>::const_iterator i = m_userSettings->getDevices().cbegin();
+        for (QList<UserSettingsService::SavedDevice>::const_iterator i = m_userSettings->getDevices().cbegin();
              i != m_userSettings->getDevices().cend(); ++i)
         {
-            setInfo(tr("Saved device added to initialized scan service list: ") + i.value().name);
+            setInfo(tr("Saved device added to initialized scan service list: ") + i->name);
             m_devices.append(new Device(
                                     QBluetoothDeviceInfo(
-                                        QBluetoothAddress(i.value().address),
-                                            i.value().name,
+                                        QBluetoothAddress(i->address),
+                                            i->name,
                                             0),
                                     false,
                                     true));
@@ -261,4 +261,52 @@ int ScanService::findDeviceById(const QString &id)
     }
     setError(tr("Device ") + id + tr(" could not be found in the scan list."));
     return -1;
+}
+
+void ScanService::saveDevice(int index)
+{
+    setInfo(tr("Attempting to save device of index: ") + QString::number(index));
+    if (m_userSettings)
+    {
+        if (index >= 0 && index < m_devices.length())
+        {
+            Device *d = qobject_cast<Device*>(m_devices[index]);
+            if (m_userSettings->addToSavedDevices(*d))
+                d->setKnown(true);
+        }
+        else
+        {
+            setError(tr("Could not save device, index out of range"));
+        }
+    }
+    else
+    {
+        setError(tr("Device settings not available, feature not initialized"));
+    }
+}
+
+void ScanService::forgetDevice(int index)
+{
+    setInfo(tr("Attempting to forget device of index: ") + QString::number(index));
+    if (m_userSettings)
+    {
+        Device *d = qobject_cast<Device*>(m_devices[index]);
+        if (m_userSettings->removeFromSavedDevices(*d))
+        {
+            if(d->isAvailable())
+            {
+                d->setKnown(false);
+            }
+            else
+            {
+                m_devices.removeAt(index);
+                delete d;
+                emit devicesChanged();
+            }
+        }
+    }
+    else
+    {
+        setError(tr("Device settings not available, feature not initialized"));
+    }
 }

@@ -33,10 +33,13 @@ ItemDelegate {
             anchors.centerIn: parent.Center
             active: delegateAvailable
             color: delegateKnown ? "green" : "orange"
+            height: name.height
+            width: height
         }
 
         Column {
             id: column
+            height: row.height //TODO make dynamic
             anchors.centerIn: parent.Center
 
             Label {

@@ -37,9 +37,9 @@ Popup {
             onCheckedChanged: {
                 if(enabled) {
                     if (checked)
-                        userSettings.addDevice(scanService.devices[deviceIndex]) // TODO change to only check if connected, but can uncheck on either
+                        scanService.saveDevice(deviceIndex)
                     else
-                        userSettings.removeDevice(scanService.devices[deviceIndex])
+                        scanService.forgetDevice(deviceIndex)
                 }
             }
         }

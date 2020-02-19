@@ -15,9 +15,9 @@ int main(int argc, char *argv[])
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication app(argc, argv);
 
-    #if defined (Q_OS_ANDROID)
+    #if defined(Q_OS_ANDROID)
     // request permissions at runtime if not already approved
-
+    if (true);
     // TODO determine if I only need the android manifest file in the android folder or the gradel config as well?
     // https://amin-ahmadi.com/2015/11/29/how-to-add-permissions-to-your-qt-android-app/
 
@@ -25,6 +25,8 @@ int main(int argc, char *argv[])
     // https://doc.qt.io/qtcreator/creator-deploying-android.html
 
     // TODO
+
+    // Starting in API level 19, this permission is not required to read/write files in your application-specific directories returned by Context.getExternalFilesDir(String) and Context.getExternalCacheDir().
     #endif
 
     UserSettingsService userSettings;

@@ -5,7 +5,7 @@
 #include <QObject>
 #include <QVariant>
 #include <QString>
-#include <QMap>
+#include <QList>
 
 class Device;
 
@@ -31,13 +31,11 @@ public:
 
     explicit UserSettingsService(QObject *parent = nullptr);
     ~UserSettingsService();
-    void addToSavedDevices(Device &device);
-    void removeFromSavedDevices(Device &device);
-    QMap<QString, SavedDevice> getDevices() const;
+    bool addToSavedDevices(const Device &device);
+    bool removeFromSavedDevices(const Device &device);
+    QList<SavedDevice> getDevices() const;
 
 public slots:
-    void addDevice(QObject *device);
-    void removeDevice(QObject *device);
     void writeChanges();
     void resetCheckedDevices();
     DeviceLoadedStatus checkDevice(const QString &id);
@@ -46,9 +44,10 @@ signals:
     void devicesChanged();
 
 private:
+    int findDeviceIndexById(const QString &id);
     bool m_changesPending = false;
     const QString m_configFile = "/config.json";
-    QMap<QString, SavedDevice> m_savedDevices; //load on startup or on insert
+    QList<SavedDevice> m_savedDevices; //load on startup or on insert
 };
 
 #endif // USERSETTINGSSERVICE_H
