@@ -4,7 +4,7 @@ import QtQuick.Controls.Material 2.12
 
 ApplicationWindow {
     visible: true
-    title: qsTr('MacoSpanks')
+    title: qsTr('MacoMobile')
 
     header: TitleBar {
         id: titleBar

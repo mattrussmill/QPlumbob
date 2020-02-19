@@ -154,14 +154,13 @@ void UserSettingsService::writeChanges()
         // Save devices
         QJsonArray devices;
         QJsonObject device;
-        for (QList<SavedDevice>::const_iterator i = m_savedDevices.cbegin();
-             i != m_savedDevices.cend(); ++i)
+        for (const SavedDevice &savedDevice : m_savedDevices)
         {
-            if (!i->address.isEmpty() && i->address != "00:00:00:00:00:00")
+            if (!savedDevice.address.isEmpty() && savedDevice.address != "00:00:00:00:00:00")
             {
-                device.insert("name", QJsonValue(i->name));
-                device.insert("address", QJsonValue(i->address));
-                device.insert("pin", QJsonValue(i->pin));
+                device.insert("name", QJsonValue(savedDevice.name));
+                device.insert("address", QJsonValue(savedDevice.address));
+                device.insert("pin", QJsonValue(savedDevice.pin));
                 devices.append(QJsonValue(device));
             }
             else
@@ -183,10 +182,9 @@ void UserSettingsService::writeChanges()
 
 void UserSettingsService::resetCheckedDevices()
 {
-    for (QList<SavedDevice>::iterator i = m_savedDevices.begin();
-         i != m_savedDevices.end(); ++i)
+    for (SavedDevice &savedDevice : m_savedDevices)
     {
-        i->status = DeviceDisabled;
+        savedDevice.status = DeviceDisabled;
     }
 }
 

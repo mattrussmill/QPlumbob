@@ -232,14 +232,13 @@ void ScanService::initializeDeviceList()
     {
         m_userSettings->resetCheckedDevices();
 
-        for (QList<UserSettingsService::SavedDevice>::const_iterator i = m_userSettings->getDevices().cbegin();
-             i != m_userSettings->getDevices().cend(); ++i)
+        for (const UserSettingsService::SavedDevice &device : m_userSettings->getDevices())
         {
-            setInfo(tr("Saved device added to initialized scan service list: ") + i->name);
+            setInfo(tr("Saved device added to initialized scan service list: ") + device.name);
             m_devices.append(new Device(
                                     QBluetoothDeviceInfo(
-                                        QBluetoothAddress(i->address),
-                                            i->name,
+                                        QBluetoothAddress(device.address),
+                                            device.name,
                                             0),
                                     false,
                                     true));

@@ -4,10 +4,11 @@
 #include "scanservice.h"
 #include "deviceservice.h"
 #include "usersettingsservice.h"
+#include <QDebug>
 
 #if defined (Q_OS_ANDROID)
 #include <QtAndroid>
-const QVector<QString> permissions();
+const QVector<QString> permissions({"android.permission.ACCESS_COARSE_LOCATION"});
 #endif
 
 int main(int argc, char *argv[])
@@ -17,16 +18,19 @@ int main(int argc, char *argv[])
 
     #if defined(Q_OS_ANDROID)
     // request permissions at runtime if not already approved
-    if (true);
-    // TODO determine if I only need the android manifest file in the android folder or the gradel config as well?
-    // https://amin-ahmadi.com/2015/11/29/how-to-add-permissions-to-your-qt-android-app/
-
-    // TODO Also how to include Qt packages in apk instead of shared through Ministro
-    // https://doc.qt.io/qtcreator/creator-deploying-android.html
-
-    // TODO
-
-    // Starting in API level 19, this permission is not required to read/write files in your application-specific directories returned by Context.getExternalFilesDir(String) and Context.getExternalCacheDir().
+    for (const QString &permission : permissions)
+    {
+        auto result = QtAndroid::checkPermission(permission);
+        if (result == QtAndroid::PermissionResult::Denied)
+        {
+            auto resultHash = QtAndroid::requestPermissionsSync(QStringList({permission}));
+            if ( resultHash[permission] == QtAndroid::PermissionResult::Denied)
+            {
+                qCritical() << "Insufficient permissions, application terminated";
+                return 0;
+            }
+        }
+    }
     #endif
 
     UserSettingsService userSettings;
