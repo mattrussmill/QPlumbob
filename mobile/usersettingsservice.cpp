@@ -54,7 +54,7 @@ UserSettingsService::UserSettingsService(QObject *parent) : BluetoothBase(parent
                     m_savedDevices.append(SavedDevice {
                                               i->toObject().value("name").toString(),
                                               i->toObject().value("address").toString(),
-                                              static_cast<uint16_t>(i->toObject().value("pin").toInt()),
+                                              i->toObject().value("pin").toString(),
                                               DeviceDisabled
                                           });
                 }
@@ -98,7 +98,7 @@ bool UserSettingsService::addToSavedDevices(const Device &device)
     m_savedDevices.append(SavedDevice {
                               device.getName(),
                               device.getAddress(),
-                              0,
+                              device.getPin(),
                               DeviceEnabled
                           });
     m_changesPending = true;

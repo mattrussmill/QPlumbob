@@ -25,7 +25,7 @@ public:
     struct SavedDevice {
         QString name;
         QString address;
-        uint16_t pin;
+        QString pin;
         DeviceLoadedStatus status;
     };
 

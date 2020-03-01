@@ -48,6 +48,7 @@ void DeviceService::setDevice(Device *device)
         });
         connect(m_control, &QLowEnergyController::connected, this, [this]() {
             setInfo(tr("BLE controller connected. Search services..."));
+            //TODO try to authenticate
             m_control->discoverServices();
         });
         connect(m_control, &QLowEnergyController::disconnected, this, [this]() {
@@ -66,7 +67,12 @@ void DeviceService::serviceDiscovered(const QBluetoothUuid &gatt)
             + ".");
 
     // check if service is expected
-    if (gatt == QBluetoothUuid(QLatin1String(DevInfo::GARMENT_SERVICE)))
+    if (gatt == QBluetoothUuid(QLatin1String(DevInfo::AUTH_SERVICE)))
+    {
+        setInfo(tr("Authentication service discovered."));
+        m_foundAuthService = true;
+    }
+    else if (gatt == QBluetoothUuid(QLatin1String(DevInfo::GARMENT_SERVICE)))
     {
         setInfo(tr("Garment service discovered."));
         m_foundGarmentService = true;
@@ -87,15 +93,26 @@ void DeviceService::disconnectDevice()
 
 void DeviceService::disconnectServices()
 {
-    //TODO setup notifications
+    bool serviceDisconnected = false;
+
+    m_foundAuthService = false;
+    if(m_authService)
+    {
+        delete m_authService;
+        m_authService = nullptr;
+        serviceDisconnected = true;
+    }
 
     m_foundGarmentService = false;
     if(m_garmentService)
     {
         delete m_garmentService;
         m_garmentService = nullptr;
-        emit aliveChanged();
+        serviceDisconnected = true;
     }
+
+    if (serviceDisconnected)
+        emit aliveChanged();
 }
 
 void DeviceService::serviceScanFinished()
@@ -105,12 +122,27 @@ void DeviceService::serviceScanFinished()
             + " services found."));
 
     // delete old service if available
+    if (m_authService) {
+        delete m_authService;
+        m_authService = nullptr;
+    }
+
     if (m_garmentService) {
         delete m_garmentService;
         m_garmentService = nullptr;
     }
 
     // setup services if found
+    if (m_foundAuthService)
+    {
+        m_authService = m_control->createServiceObject(QBluetoothUuid(QLatin1String(DevInfo::AUTH_SERVICE)), this);
+
+        if (m_authService)
+        {
+            // TODO
+        }
+    }
+
     if (m_foundGarmentService)
     {
         m_garmentService = m_control->createServiceObject(QBluetoothUuid(QLatin1String(DevInfo::GARMENT_SERVICE)), this);
@@ -120,7 +152,9 @@ void DeviceService::serviceScanFinished()
             connect(m_garmentService, &QLowEnergyService::stateChanged, this, &DeviceService::serviceStateChanged);
             connect(m_garmentService, &QLowEnergyService::characteristicWritten, this, &DeviceService::updateGarmentCharacteristic);
             connect(m_garmentService, QOverload<QLowEnergyService::ServiceError>::of(&QLowEnergyService::error), this, &DeviceService::serviceError);
-            connect(m_garmentService, &QLowEnergyService::stateChanged, this, &DeviceService::serviceStateChanged);
+
+            // TODO -- test how this works INDICATE VS NOTIFY -> also probably want to change to a different function so a notification can occur if device not set to same written value
+            //connect(m_garmentService, &QLowEnergyService::characteristicChanged, this, &DeviceService::updateGarmentCharacteristic);
 
             m_garmentService->discoverDetails();
             setInfo(tr("Garment service set."));
@@ -128,16 +162,21 @@ void DeviceService::serviceScanFinished()
     }
 }
 
+//TODO garment characteristic changed slot
+//      check if changed characteristic is same as saved value?
+
 void DeviceService::updateGarmentCharacteristic(const QLowEnergyCharacteristic &characteristic, const QByteArray &value)
 {
     if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::PELVIS_PWM_CHARACTERISTIC)))
     {
         m_pelvisDutyCycle = *value.data();
         emit pelvisDutyCycleChanged();
+        setInfo(tr("Pelvis pwm value successfully written: ") + QString::number(m_pelvisDutyCycle));
     } else if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::GLUTEUS_PWM_CHARACTERISTIC)))
     {
         m_gluteusDutyCycle = *value.data();
         emit gluteusDutyCycleChanged();
+        setInfo(tr("Gluteus pwm value successfully written: ") + QString::number(m_pelvisDutyCycle));
     }
 }
 

@@ -73,9 +73,10 @@ private:
 
     QLowEnergyController *m_control = nullptr;
     QLowEnergyService *m_garmentService = nullptr;
-    //QLowEnergyDescriptor m_notificationDesc; //TODO implement this
+    QLowEnergyService *m_authService= nullptr;
     Device *m_device = nullptr;
     bool m_foundGarmentService = false;
+    bool m_foundAuthService = false;
 
     uint8_t m_pelvisDutyCycle = 0;
     uint8_t m_gluteusDutyCycle = 0;

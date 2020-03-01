@@ -42,7 +42,7 @@ ApplicationWindow {
         Component {
             id: deviceListComponent
 
-            DeviceList {
+            DeviceListMenu {
                 id: deviceList
                 Component.onCompleted: {
                     selectedDeviceIndex.connect(settings.setSelectedDeviceIndex)

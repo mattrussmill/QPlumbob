@@ -41,9 +41,24 @@ Item {
         function connectToDevice() {
             if (selectedIndex < 0) {
                 console.log('Invalid device selected')
-                return;
+            } else if (scanService.devices[selectedIndex].available) {
+                if (!scanService.devices[selectedIndex].known) {
+                    userPinDialog.open()
+                } else {
+                    scanService.connectToDevice(selectedIndex)
+                }
             }
-            scanService.connectToDevice(scanService.devices[selectedIndex].address)
+
+        }
+    }
+
+    PinDialog {
+        id: userPinDialog
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        onAccepted: {
+            scanService.devices[list.selectedIndex].pin = pin
+            scanService.connectToDevice(list.selectedIndex)
         }
     }
 
@@ -71,7 +86,6 @@ Item {
 
         Component.onCompleted: {
             scanClicked.connect(scanService.startScan)
-            //scanClicked.connect(() => list.setSelectedDevice(-1))
             connectClicked.connect(scanService.stopScan)
             connectClicked.connect(list.connectToDevice)
             scanService.startScan()

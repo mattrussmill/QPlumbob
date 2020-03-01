@@ -5,7 +5,6 @@ import QtQuick.Layouts 1.12
 Popup {
     id: root
     modal: true
-
     property int deviceIndex: -1
     function setSelectedDeviceIndex (index) {
         deviceIndex = index
@@ -27,7 +26,7 @@ Popup {
 
         CheckBox {
             id: saveCheckbox
-            enabled: deviceIndex >= 0
+            enabled: deviceIndex >= 0 && (saveCheckbox.checked || deviceService.alive)
 
             onEnabledChanged: {
                 if(!enabled)
@@ -46,54 +45,8 @@ Popup {
 
         Label {
             id: saveLabel
-            enabled: deviceIndex >= 0
+            enabled: deviceIndex >= 0 && (saveCheckbox.checked || deviceService.alive)
             text: "Save Device"
-        }
-
-
-        TextField {
-            id: pulseField
-            enabled: deviceService.alive
-            inputMask: "99"
-            implicitWidth: FontMetrics.averageCharacterWidth * 2
-            inputMethodHints: Qt.ImhDigitsOnly
-            onFocusChanged: {
-                if (focus)
-                    cursorPosition = text.length
-            }
-            onCursorPositionChanged: {
-                if (text.length == 0)
-                    cursorPosition = 0
-            }
-        }
-
-        Label {
-            id: pulseLabel
-            enabled: deviceService.alive
-            text: "Pulse Duration"
-        }
-
-
-        TextField { // TODO Make component?
-            id: safetyField
-            enabled: deviceService.alive
-            inputMask: "99"
-            implicitWidth: FontMetrics.averageCharacterWidth * 2
-            inputMethodHints: Qt.ImhDigitsOnly
-            onFocusChanged: {
-                if (focus)
-                    cursorPosition = text.length
-            }
-            onCursorPositionChanged: {
-                if (text.length == 0)
-                    cursorPosition = 0
-            }
-        }
-
-        Label { // TODO Design items with labels for this with a base object
-            id: safetyLabel
-            enabled: deviceService.alive
-            text: "Safety Timeout"
         }
     }
 }

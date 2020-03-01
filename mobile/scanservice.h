@@ -31,7 +31,7 @@ public:
 public slots:
     void startScan();
     void stopScan();
-    void connectToDevice(const QString &address);
+    void connectToDevice(const int index);
     void saveDevice(int index);
     void forgetDevice(int index);
 

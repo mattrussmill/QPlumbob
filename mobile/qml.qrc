@@ -3,11 +3,12 @@
         <file>main.qml</file>
         <file>TitleBar.qml</file>
         <file>ListControlBar.qml</file>
-        <file>DeviceList.qml</file>
+        <file>DeviceListMenu.qml</file>
         <file>DeviceListDelegate.qml</file>
         <file>GarmentMenu.qml</file>
-        <file>Garment.qml</file>
+        <file>GarmentPage.qml</file>
         <file>GarmentSlider.qml</file>
         <file>SettingsMenu.qml</file>
+        <file>PinDialog.qml</file>
     </qresource>
 </RCC>

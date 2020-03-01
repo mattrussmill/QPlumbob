@@ -7,7 +7,7 @@ Item {
         currentIndex: 0
         anchors.fill: parent
 
-        Garment {
+        GarmentPage {
             id: frontRegion
             regionName: 'Pelvis'
             onValueChanged: {
@@ -15,7 +15,7 @@ Item {
             }
         }
 
-        Garment {
+        GarmentPage {
             id: rearRegion
             regionName: 'Gluteus'
             onValueChanged: {

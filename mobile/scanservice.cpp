@@ -76,8 +76,10 @@ void ScanService::addDevice(const QBluetoothDeviceInfo &device)
                     index = findDeviceById(device.address().toString());
                     if (index >= 0)
                     {
-                        qobject_cast<Device*>(m_devices[index])->setKnown(false);
-                        setInfo(device.name() + " & " + qobject_cast<Device*>(m_devices[index])->getName()
+                        Device *d = qobject_cast<Device*>(m_devices[index]);
+                        d->setKnown(false);
+                        d->setPin("");
+                        setInfo(device.name() + " & " + d->getName()
                                 + tr(" created a device conflict during scan, but it was resolved."));
                     }
                     else
@@ -149,20 +151,14 @@ void ScanService::scanFinished()
     emit devicesChanged();
 }
 
-void ScanService::connectToDevice(const QString &address)
+void ScanService::connectToDevice(const int index)
 {
     m_deviceDiscoveryAgent->stop();
 
     Device *currentDevice = nullptr;
-    for (QObject *d : qAsConst(m_devices))
-    {
-        auto device = qobject_cast<Device *>(d);
-        if (device && device->getAddress() == address) //iOS will have to be uuid
-        {
-            currentDevice = device;
-            break;
-        }
-    }
+
+    if (index >= 0 && index < m_devices.length())
+        currentDevice = qobject_cast<Device *>(m_devices[index]);
 
     if (currentDevice)
     {
@@ -171,7 +167,7 @@ void ScanService::connectToDevice(const QString &address)
     }
     else
     {
-        setError(tr("Unable to connect to device " + address.toLatin1() + ". Device not found."));
+        setError(tr("Unable to connect to device at specified index"));
         emit deviceLookupError();
     }
 
@@ -241,7 +237,8 @@ void ScanService::initializeDeviceList()
                                             device.name,
                                             0),
                                     false,
-                                    true));
+                                    true,
+                                    device.pin));
         }
     }
 
