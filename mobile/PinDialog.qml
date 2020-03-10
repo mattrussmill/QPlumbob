@@ -4,7 +4,7 @@ import QtQuick.Layouts 1.12
 
 Dialog {
     id: root
-    property string pin: pinField.text
+    property string pin
     modal: true
     title: qsTr("Device Pin")
     standardButtons: Dialog.Ok
@@ -21,6 +21,7 @@ Dialog {
             validator: IntValidator {}
             maximumLength: 6
             echoMode: TextInput.Password
+            onEditingFinished: root.pin = text
         }
     }
 }

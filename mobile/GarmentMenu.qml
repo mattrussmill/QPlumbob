@@ -11,7 +11,7 @@ Item {
             id: frontRegion
             regionName: 'Pelvis'
             onValueChanged: {
-                deviceService.setPelvisDutyCyckle(value)
+                deviceService.setPelvisDutyCycle(value)
             }
         }
 
@@ -19,7 +19,7 @@ Item {
             id: rearRegion
             regionName: 'Gluteus'
             onValueChanged: {
-                deviceService.setGluteusDutyCyckle(value)
+                deviceService.setGluteusDutyCycle(value)
             }
         }
 

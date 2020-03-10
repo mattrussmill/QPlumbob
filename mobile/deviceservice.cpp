@@ -42,13 +42,11 @@ void DeviceService::setDevice(Device *device)
 
         connect(m_control, &QLowEnergyController::serviceDiscovered, this, &DeviceService::serviceDiscovered);
         connect(m_control, &QLowEnergyController::discoveryFinished, this, &DeviceService::serviceScanFinished);
-        connect(m_control, static_cast<void (QLowEnergyController::*)(QLowEnergyController::Error)>(&QLowEnergyController::error),
-                this, [this]() {
+        connect(m_control, static_cast<void (QLowEnergyController::*)(QLowEnergyController::Error)>(&QLowEnergyController::error), this, [this]() {
             setError(m_control->errorString()); // TODO - does this produce the correct errors?
         });
         connect(m_control, &QLowEnergyController::connected, this, [this]() {
             setInfo(tr("BLE controller connected. Search services..."));
-            //TODO try to authenticate
             m_control->discoverServices();
         });
         connect(m_control, &QLowEnergyController::disconnected, this, [this]() {
@@ -139,7 +137,20 @@ void DeviceService::serviceScanFinished()
 
         if (m_authService)
         {
-            // TODO
+            connect(m_authService, &QLowEnergyService::stateChanged, this, [this](QLowEnergyService::ServiceState state) {
+                serviceStateChanged(state, m_authService->serviceUuid().toString(QUuid::WithoutBraces));
+            });
+            connect(m_authService, &QLowEnergyService::stateChanged, this, &DeviceService::authenticate);
+            connect(m_authService, QOverload<QLowEnergyService::ServiceError>::of(&QLowEnergyService::error), this, [this](QLowEnergyService::ServiceError error){
+                serviceError(error, m_authService->serviceUuid().toString(QUuid::WithoutBraces));
+            });
+            connect(m_authService, &QLowEnergyService::characteristicWritten, this,  &DeviceService::updateAuthCharacteristic);
+
+            // TODO -- test how this works INDICATE VS NOTIFY -> also probably want to change to a different function so a notification can occur if device not set to same written value
+            //connect(m_garmentService, &QLowEnergyService::characteristicChanged, this, &DeviceService::updateGarmentCharacteristic);
+
+            m_authService->discoverDetails();
+            setInfo(tr("Authentication service set."));
         }
     }
 
@@ -149,12 +160,13 @@ void DeviceService::serviceScanFinished()
 
         if (m_garmentService)
         {
-            connect(m_garmentService, &QLowEnergyService::stateChanged, this, &DeviceService::serviceStateChanged);
+            connect(m_garmentService, &QLowEnergyService::stateChanged, this, [this](QLowEnergyService::ServiceState state) {
+                serviceStateChanged(state, m_garmentService->serviceUuid().toString(QUuid::WithoutBraces));
+            });
+            connect(m_garmentService, QOverload<QLowEnergyService::ServiceError>::of(&QLowEnergyService::error), this, [this](QLowEnergyService::ServiceError error){
+                serviceError(error, m_garmentService->serviceUuid().toString(QUuid::WithoutBraces));
+            });
             connect(m_garmentService, &QLowEnergyService::characteristicWritten, this, &DeviceService::updateGarmentCharacteristic);
-            connect(m_garmentService, QOverload<QLowEnergyService::ServiceError>::of(&QLowEnergyService::error), this, &DeviceService::serviceError);
-
-            // TODO -- test how this works INDICATE VS NOTIFY -> also probably want to change to a different function so a notification can occur if device not set to same written value
-            //connect(m_garmentService, &QLowEnergyService::characteristicChanged, this, &DeviceService::updateGarmentCharacteristic);
 
             m_garmentService->discoverDetails();
             setInfo(tr("Garment service set."));
@@ -162,8 +174,13 @@ void DeviceService::serviceScanFinished()
     }
 }
 
-//TODO garment characteristic changed slot
-//      check if changed characteristic is same as saved value?
+void DeviceService::updateAuthCharacteristic(const QLowEnergyCharacteristic &characteristic, const QByteArray &value) //TODO keep?
+{
+    if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::PIN_CHARACTERISTIC)))
+    {
+        setInfo(tr("Attempted pin successfully written"));
+    }
+}
 
 void DeviceService::updateGarmentCharacteristic(const QLowEnergyCharacteristic &characteristic, const QByteArray &value)
 {
@@ -180,52 +197,52 @@ void DeviceService::updateGarmentCharacteristic(const QLowEnergyCharacteristic &
     }
 }
 
-void DeviceService::serviceStateChanged(QLowEnergyService::ServiceState state)
+void DeviceService::serviceStateChanged(QLowEnergyService::ServiceState state, const QString &service)
 {
     switch(state)
     {
         case QLowEnergyService::InvalidService:
-            setInfo(tr("Service State: Invalid service - connection may have been lost."));
+            setInfo(service + tr(" Service State: Invalid service - connection may have been lost."));
             break;
         case QLowEnergyService::DiscoveryRequired:
-            setInfo(tr("Service State: Service discovery required."));
+            setInfo(service + tr(" Service State: Service discovery required."));
             break;
         case QLowEnergyService::DiscoveringServices:
-            setInfo(tr("Service State: Discovering services."));
+            setInfo(service + tr(" Service State: Discovering services."));
             break;
         case QLowEnergyService::ServiceDiscovered:
-            setInfo(tr("Service State: Service discovered."));
+            setInfo(service + tr(" Service State: Service discovered."));
             break;
         default:
-            setInfo(tr("Service State: Untracked state occured."));
+            setInfo(service + tr(" Service State: Untracked state occured."));
     }
     emit aliveChanged();
 }
 
-void DeviceService::serviceError(QLowEnergyService::ServiceError error)
+void DeviceService::serviceError(QLowEnergyService::ServiceError error, const QString &service)
 {
     switch(error)
     {
         case QLowEnergyService::OperationError:
-            setError(tr("An operation was attempted while the service was not ready."));
+            setError(service + tr(": An operation was attempted while the service was not ready."));
             break;
         case QLowEnergyService::CharacteristicReadError:
-            setError(tr("An attempt to read a characteristic value failed."));
+            setError(service + tr(": An attempt to read a characteristic value failed."));
             break;
         case QLowEnergyService::CharacteristicWriteError:
-            setError(tr("An attempt to write a new value to a characteristic failed."));
+            setError(service + tr(": An attempt to write a new value to a characteristic failed."));
             break;
         case QLowEnergyService::DescriptorReadError:
-            setError(tr("An attempt to read a descriptor value failed. "));
+            setError(service + tr(": An attempt to read a descriptor value failed. "));
             break;
         case QLowEnergyService::DescriptorWriteError:
-            setError(tr("An attempt to write a new value to a descriptor failed."));
+            setError(service + tr(": An attempt to write a new value to a descriptor failed."));
             break;
         case QLowEnergyService::UnknownError:
-            setError(tr("An unknown error occurred when interacting with the service."));
+            setError(service + tr(": An unknown error occurred when interacting with the service."));
             break;
         default:
-            setError(tr("An untracked error occured."));
+            setError(service + tr(": An untracked error occured."));
     }
 }
 
@@ -236,10 +253,10 @@ QVariant DeviceService::device() const
 
 bool DeviceService::alive() const
 {
-    if(!m_garmentService)
+    if(!(m_garmentService || m_authService))
         return false;
 
-    return m_garmentService->state() == QLowEnergyService::ServiceDiscovered;
+    return m_authService->state() == QLowEnergyService::ServiceDiscovered; //TODO Authenticated - need a bool
 }
 
 int DeviceService::timeoutRemaining() const
@@ -247,7 +264,31 @@ int DeviceService::timeoutRemaining() const
     return -1; // TODO
 }
 
-void DeviceService::setPelvisDutyCyckle(int percent)
+void DeviceService::setAuthenticationPin(const QString &pin)
+{
+    QByteArray paddedPin = pin.toLatin1();
+    if (paddedPin.length() < PIN_LENGTH)
+    {
+        paddedPin.prepend(PIN_LENGTH - paddedPin.length(), '0');
+    }
+
+    setInfo(tr("Attempting to set pin to: ") + pin);
+    m_authService->writeCharacteristic(
+                m_authService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::PIN_CHARACTERISTIC))),
+                paddedPin,
+                QLowEnergyService::WriteMode::WriteWithoutResponse);
+}
+
+void DeviceService::authenticate(QLowEnergyService::ServiceState state)
+{
+    if (state == QLowEnergyService::ServiceDiscovered)
+    {
+        // TODO read characteristic to see if authenticated first
+        setAuthenticationPin(m_device->getPin());
+    }
+}
+
+void DeviceService::setPelvisDutyCycle(int percent)
 {
     setInfo(tr("Attempting to set pelvis pwm to: " + QString::number(percent).toLatin1() + "%"));
     m_garmentService->writeCharacteristic(
@@ -266,7 +307,7 @@ bool DeviceService::pelvisAvailable() const
     return m_garmentService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::PELVIS_PWM_CHARACTERISTIC))).isValid();
 }
 
-void DeviceService::setGluteusDutyCyckle(int percent)
+void DeviceService::setGluteusDutyCycle(int percent)
 {
     setInfo(tr("Attempting to set gluteus pwm to: " + QString::number(percent).toLatin1() + "%"));
     m_garmentService->writeCharacteristic(

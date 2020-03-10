@@ -18,8 +18,8 @@ class DeviceService : public BluetoothBase
     Q_PROPERTY(int timeoutRemaining READ timeoutRemaining WRITE setTimeout)
     Q_PROPERTY(QVariant device READ device NOTIFY deviceChanged)
 
-    Q_PROPERTY(int pelvisDutyCycle READ pelvisDutyCycle WRITE setPelvisDutyCyckle NOTIFY pelvisDutyCycleChanged)
-    Q_PROPERTY(int gluteusDutyCycle READ gluteusDutyCycle WRITE setGluteusDutyCyckle NOTIFY gluteusDutyCycleChanged)
+    Q_PROPERTY(int pelvisDutyCycle READ pelvisDutyCycle WRITE setPelvisDutyCycle NOTIFY pelvisDutyCycleChanged)
+    Q_PROPERTY(int gluteusDutyCycle READ gluteusDutyCycle WRITE setGluteusDutyCycle NOTIFY gluteusDutyCycleChanged)
 
 public:
     DeviceService(QObject *parent = nullptr);
@@ -41,8 +41,8 @@ public slots:
     void disconnectDevice();
     void disconnectServices();
 
-    void setPelvisDutyCyckle(int percent);
-    void setGluteusDutyCyckle(int percent);
+    void setPelvisDutyCycle(int percent);
+    void setGluteusDutyCycle(int percent);
     void setTimeout(int minutes);
     void queryGarmentService();
     void queryDeviceVersionInfo();
@@ -60,10 +60,13 @@ signals:
 
 private slots:
     void serviceDiscovered(const QBluetoothUuid &);
-    void serviceStateChanged(QLowEnergyService::ServiceState state);
-    void serviceError(QLowEnergyService::ServiceError error);
+    void serviceStateChanged(QLowEnergyService::ServiceState state, const QString &service);
+    void serviceError(QLowEnergyService::ServiceError error, const QString &service);
     void serviceScanFinished();
+    void updateAuthCharacteristic(const QLowEnergyCharacteristic &characteristic, const QByteArray &value);
     void updateGarmentCharacteristic(const QLowEnergyCharacteristic &characteristic, const QByteArray &value);
+    void setAuthenticationPin(const QString &pin);
+    void authenticate(QLowEnergyService::ServiceState state);
 
 private:
     void updateValue(const QLowEnergyCharacteristic &c,
