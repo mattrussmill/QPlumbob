@@ -15,9 +15,11 @@
 BLEService authService(DevInfo::AUTH_SERVICE);
 
 //BLE Basic Authentication Characteristics
-BLECharacteristic pinCharacteristic(DevInfo::PIN_CHARACTERISTIC, '0', 6 * sizeof(uint8_t), BLEWrite);
+BLEStringCharacteristic pinCharacteristic(DevInfo::PIN_CHARACTERISTIC, PIN_LENGTH, BLEWrite);
 BLEBoolCharacteristic authCharacteristic(DevInfo::AUTH_STATUS_CHARACTERISTIC, BLERead | BLEIndicate); //TODO test notify vs indicate if value changed internally // and is it only on write? Do I need a separate value?
-uint8_t pin[6] = {'0', '0', '0', '0', '0', '0'};
+String pin;
+bool authenticated = false;
+
 
 // BLE Heating PWM Service
 BLEService garmentService(DevInfo::GARMENT_SERVICE);
@@ -61,7 +63,7 @@ void setup()
   timerCharacteristic.writeValue(-1);
 
   // set initial pin to saved pin and authenticated to false
-  pinCharacteristic.writeValue(pin, 6* sizeof(uint8_t));
+  pinCharacteristic.writeValue("000000"); //TODO This
   authCharacteristic.writeValue(false);
 
   // enable two regions for this device in the off position
@@ -78,6 +80,7 @@ void setup()
 
 
   // setup BLE module
+  BLE.addService(authService);
   BLE.addService(garmentService);
   BLE.setAdvertisedService(authService);        // Additional services will be discovered once connection is established.
   BLE.setDeviceName("MacoGarment_v0.0.1");      // device name -> how does this differ from garment?
@@ -89,7 +92,7 @@ void setup()
   // set callback functions for events
   BLE.setEventHandler(BLEConnected, bleConnectedHandler);
   BLE.setEventHandler(BLEDisconnected, bleDisconnectedHandler);
-  pinCharacteristic.setEventHandler(BLEWritten, authenticatePinHandler); 
+  pinCharacteristic.setEventHandler(BLEWritten, pinWriteHandler); 
   pelvisCharacteristic.setEventHandler(BLEWritten, pelvisWriteHandler);
   gluteusCharacteristic.setEventHandler(BLEWritten, gluteusWriteHandler);
 
@@ -106,22 +109,38 @@ void loop()
 
 }
 
-void authenticatePinHandler(BLEDevice central, BLECharacteristic characteristic)
+void pinWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
   // steps to perform simple pin authentication
-  if (characteristic.valueLength() == 6)
+  if (pinCharacteristic.valueLength() == PIN_LENGTH)
   {
-    uint8_t tryPin[6];
-    characteristic.readValue(tryPin, 6 * sizeof(uint8_t));
-    if (memcmp(tryPin, pin, 6 * sizeof(uint8_t)) == 0)
+    uint8_t tryPin[PIN_LENGTH];
+    pinCharacteristic.readValue(tryPin, PIN_LENGTH * sizeof(uint8_t));
+
+    // if not authenticated try to authenticate
+    if (!authenticated)
     {
-      authCharacteristic.writeValue(true);
-      Serial.println("Device Authenticated!");
-      return;
+      if (strcmp(tryPin, pin, PIN_LENGTH * sizeof(uint8_t)) == 0) //FIX
+      {
+        authCharacteristic.writeValue(true);
+        authenticated = true;
+        Serial.println("Device Authenticated!");
+        return;
+      }
+      else // disconnect on fail
+      {
+        authCharacteristic.writeValue(false);
+        BLE.disconnect();
+      }
+    }
+    else //if authenticated, save pin
+    {
+      //TODO save pin
     }
   }
   authCharacteristic.writeValue(false);
   Serial.println("Authentication FAILED");
+  BLE.disconnect();
   // disconnect on fail?
 }
 
@@ -134,8 +153,8 @@ void timeoutWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 
 void pelvisWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
-  if (authCharacteristic.value())
-    pelvisValue = *characteristic.value(); //TODO when to place notify? Does it notify on write from central or write from internal?
+  if (authenticated)
+    pelvisValue = pelvisCharacteristic.value(); //TODO when to place notify? Does it notify on write from central or write from internal?
 
   analogWrite(PELVIS_PIN, TO_PWM(pelvisValue));
   Serial.print("Pelvis Written: ");
@@ -163,7 +182,7 @@ void bleConnectedHandler(BLEDevice central)
 void bleDisconnectedHandler(BLEDevice central)
 {
   // central disconnected event handler
-  // authenticated = false;
+  authenticated = false;
   digitalWrite(LED_BUILTIN, LOW);
   Serial.print("Disconnected event, central: ");
   Serial.println(central.address());

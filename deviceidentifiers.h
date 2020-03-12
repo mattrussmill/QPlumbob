@@ -1,5 +1,6 @@
 #ifndef DEVICEIDENTIFIERS_H
 #define DEVICEIDENTIFIERS_H
+#define PIN_LENGTH 6
 
 namespace DevInfo
 {

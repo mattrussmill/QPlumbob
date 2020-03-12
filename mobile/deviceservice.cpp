@@ -266,16 +266,10 @@ int DeviceService::timeoutRemaining() const
 
 void DeviceService::setAuthenticationPin(const QString &pin)
 {
-    QByteArray paddedPin = pin.toLatin1();
-    if (paddedPin.length() < PIN_LENGTH)
-    {
-        paddedPin.prepend(PIN_LENGTH - paddedPin.length(), '0');
-    }
-
     setInfo(tr("Attempting to set pin to: ") + pin);
     m_authService->writeCharacteristic(
                 m_authService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::PIN_CHARACTERISTIC))),
-                paddedPin,
+                pin.toLatin1(),
                 QLowEnergyService::WriteMode::WriteWithoutResponse);
 }
 
@@ -283,7 +277,6 @@ void DeviceService::authenticate(QLowEnergyService::ServiceState state)
 {
     if (state == QLowEnergyService::ServiceDiscovered)
     {
-        // TODO read characteristic to see if authenticated first
         setAuthenticationPin(m_device->getPin());
     }
 }
