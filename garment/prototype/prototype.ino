@@ -20,7 +20,6 @@ BLEBoolCharacteristic authCharacteristic(DevInfo::AUTH_STATUS_CHARACTERISTIC, BL
 String pin;
 bool authenticated = false;
 
-
 // BLE Heating PWM Service
 BLEService garmentService(DevInfo::GARMENT_SERVICE);
 
@@ -31,6 +30,9 @@ BLEIntCharacteristic timerCharacteristic(DevInfo::TIMER_CHARACTERISTIC, BLERead 
 uint8_t pelvisValue = 0;
 uint8_t gluteusValue = 0;
 int timerStartValue = 0;
+
+// FlashStorage
+FlashStorage(savedPin, String);
 
 
 void setup()
@@ -63,7 +65,7 @@ void setup()
   timerCharacteristic.writeValue(-1);
 
   // set initial pin to saved pin and authenticated to false
-  pinCharacteristic.writeValue("000000"); //TODO This
+  pin = savedPin.read();
   authCharacteristic.writeValue(false);
 
   // enable two regions for this device in the off position
@@ -112,50 +114,37 @@ void loop()
 void pinWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
   // steps to perform simple pin authentication
-  if (pinCharacteristic.valueLength() == PIN_LENGTH)
+  if (!authenticated && pinCharacteristic.value() == pin)
   {
-    uint8_t tryPin[PIN_LENGTH];
-    pinCharacteristic.readValue(tryPin, PIN_LENGTH * sizeof(uint8_t));
-
-    // if not authenticated try to authenticate
-    if (!authenticated)
-    {
-      if (strcmp(tryPin, pin, PIN_LENGTH * sizeof(uint8_t)) == 0) //FIX
-      {
-        authCharacteristic.writeValue(true);
-        authenticated = true;
-        Serial.println("Device Authenticated!");
-        return;
-      }
-      else // disconnect on fail
-      {
-        authCharacteristic.writeValue(false);
-        BLE.disconnect();
-      }
-    }
-    else //if authenticated, save pin
-    {
-      //TODO save pin
-    }
+    authCharacteristic.writeValue(true);
+    authenticated = true;
+    Serial.println("Device Authenticated!");
+    return;
   }
-  authCharacteristic.writeValue(false);
+  else if (authenticated)
+  {
+    pin = pinCharacteristic.value();
+    savedPin.write(pin);
+    Serial.println("New pin saved!");
+    return;
+  }
+  
   Serial.println("Authentication FAILED");
+  disconnectFromCentralActions();
   BLE.disconnect();
-  // disconnect on fail?
 }
 
   
 void timeoutWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
+  if (!isAuthenticated) return;
   //TODO
 }
 
 
 void pelvisWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
-  if (authenticated)
-    pelvisValue = pelvisCharacteristic.value(); //TODO when to place notify? Does it notify on write from central or write from internal?
-
+  if (!isAuthenticated) return;
   analogWrite(PELVIS_PIN, TO_PWM(pelvisValue));
   Serial.print("Pelvis Written: ");
   Serial.println(TO_PWM(pelvisCharacteristic.value()), DEC);
@@ -164,6 +153,7 @@ void pelvisWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 
 void gluteusWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
+  if (!isAuthenticated) return;
   analogWrite(GLUTEUS_PIN, TO_PWM(gluteusCharacteristic.value()));
   Serial.print("Gluteus Written: ");
   Serial.println(TO_PWM(gluteusCharacteristic.value()), DEC);
@@ -182,8 +172,25 @@ void bleConnectedHandler(BLEDevice central)
 void bleDisconnectedHandler(BLEDevice central)
 {
   // central disconnected event handler
+  if (!isAuthenticated) return;
+}
+
+void disconnectFromCentralActions()
+{
+  authCharacteristic.writeValue(false);
   authenticated = false;
   digitalWrite(LED_BUILTIN, LOW);
   Serial.print("Disconnected event, central: ");
-  Serial.println(central.address());
+  Serial.println(BLE.central().address());
+}
+
+bool isAuthenticated()
+{
+  if (!authenticated)
+  {
+    Serial.println("Authentication FAILED");
+    disconnectFromCentralActions();
+    BLE.disconnect();
+  }
+  return authenticated;
 }
