@@ -57,6 +57,7 @@ ApplicationWindow {
                 id: selectedGarment
                 Component.onCompleted: {
                     stack.garmentLoaded = true
+                    settings.openPinDialog.connect(changeDevicePin)
                 }
                 Component.onDestruction: {
                     stack.garmentLoaded = false

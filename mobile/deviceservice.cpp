@@ -270,7 +270,7 @@ void DeviceService::setAuthenticationPin(const QString &pin)
     m_authService->writeCharacteristic(
                 m_authService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::PIN_CHARACTERISTIC))),
                 pin.toLatin1(),
-                QLowEnergyService::WriteMode::WriteWithoutResponse);
+                QLowEnergyService::WriteMode::WriteWithoutResponse); //TODO change to write with response
 }
 
 void DeviceService::authenticate(QLowEnergyService::ServiceState state)

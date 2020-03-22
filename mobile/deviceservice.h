@@ -46,6 +46,7 @@ public slots:
     void setTimeout(int minutes);
     void queryGarmentService();
     void queryDeviceVersionInfo();
+    void setAuthenticationPin(const QString &pin);
 
 signals:
     void aliveChanged();
@@ -65,7 +66,6 @@ private slots:
     void serviceScanFinished();
     void updateAuthCharacteristic(const QLowEnergyCharacteristic &characteristic, const QByteArray &value);
     void updateGarmentCharacteristic(const QLowEnergyCharacteristic &characteristic, const QByteArray &value);
-    void setAuthenticationPin(const QString &pin);
     void authenticate(QLowEnergyService::ServiceState state);
 
 private:
