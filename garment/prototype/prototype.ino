@@ -7,6 +7,7 @@
 // nano 33 PWM duty cycle: 490 Hz (pins 5 and 6: 980 Hz)
 #define PELVIS_PIN 9
 #define GLUTEUS_PIN 10
+#define RESET_PIN 2
 
 // macros
 #define TO_PWM(V) static_cast<int> round(2.55 * V)
@@ -34,6 +35,8 @@ int timerStartValue = 0;
 // FlashStorage
 FlashStorage(savedPin, String);
 
+//TODO test
+int count = 0;
 
 void setup()
 {
@@ -50,6 +53,9 @@ void setup()
 
   pinMode(GLUTEUS_PIN, OUTPUT);
   analogWrite(GLUTEUS_PIN, 0);
+
+  pinMode(RESET_PIN, INPUT);
+  attachInterrupt(digitalPinToInterrupt(RESET_PIN), resetNonvolatileMemory, RISING);
 
 
   // initialize BLE module
@@ -101,6 +107,8 @@ void setup()
   // finish initialization
   BLE.advertise();                              // start advertising
   Serial.println("Initialization complete... advertising");
+
+  interrupts();
 }
 
 
@@ -108,7 +116,7 @@ void loop()
 {
   // put your main code here, to run repeatedly:
   BLE.poll();
-
+  //Serial.println(digitalRead(RESET_PIN), DEC);
 }
 
 void pinWriteHandler(BLEDevice central, BLECharacteristic characteristic)
@@ -193,4 +201,10 @@ bool isAuthenticated()
     BLE.disconnect();
   }
   return authenticated;
+}
+
+void resetNonvolatileMemory()
+{
+  // TODO debounce with CAP, not in routine
+  Serial.println(++count, DEC);
 }
