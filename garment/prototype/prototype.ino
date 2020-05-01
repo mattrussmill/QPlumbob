@@ -9,6 +9,9 @@
 #define GLUTEUS_PIN 10
 #define RESET_PIN 2
 
+// defaults
+#define DEFAULT_PIN "0000"
+
 // macros
 #define TO_PWM(V) static_cast<int> round(2.55 * V)
 
@@ -73,6 +76,13 @@ void setup()
   // set initial pin to saved pin and authenticated to false
   pin = savedPin.read();
   authCharacteristic.writeValue(false);
+  Serial.println("THIS IS THE INITIAL PIN: " + pin);
+  if (pin == "") //set default if empty
+  {
+    Serial.println("Pin initialized to default");
+    pin = DEFAULT_PIN;
+    savedPin.write(pin);
+  }
 
   // enable two regions for this device in the off position
   pelvisCharacteristic.writeValue(0);
@@ -108,6 +118,7 @@ void setup()
   BLE.advertise();                              // start advertising
   Serial.println("Initialization complete... advertising");
 
+  // enable interrupts
   interrupts();
 }
 
@@ -116,7 +127,6 @@ void loop()
 {
   // put your main code here, to run repeatedly:
   BLE.poll();
-  //Serial.println(digitalRead(RESET_PIN), DEC);
 }
 
 void pinWriteHandler(BLEDevice central, BLECharacteristic characteristic)
@@ -205,6 +215,16 @@ bool isAuthenticated()
 
 void resetNonvolatileMemory()
 {
-  // TODO debounce with CAP, not in routine
-  Serial.println(++count, DEC);
+  //button debounced with cap externally
+  unsigned long startCount = 0;
+  while(digitalRead(RESET_PIN) == HIGH)
+  {
+    startCount++;
+    // reset at ~6 seconds (rough estimate)
+    if (startCount > 5000000) {
+      savedPin.write(DEFAULT_PIN);
+      Serial.println("DEVICE RESTORED TO DEFAULT - PLEASE RESTART DEVICE!");
+      break;
+    }
+  }
 }
