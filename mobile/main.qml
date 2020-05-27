@@ -12,14 +12,14 @@ ApplicationWindow {
             backButtonClicked.connect(stack.pop)
             backButtonClicked.connect(scanService.stopScan)
             backButtonClicked.connect(deviceService.disconnectDevice)
-            menuButtonClicked.connect(settings.open)
+            menuButtonClicked.connect(settingsMenu.open)
         }
         Material.background: deviceService.alive ? 'blue' : 'red' //TODO remove - used for testing
     }
 
     SettingsMenu {
-        id: settings
-        x: parent.width - settings.width
+        id: settingsMenu
+        x: parent.width - settingsMenu.width
     }
 
     StackView {
@@ -45,7 +45,7 @@ ApplicationWindow {
             DeviceListMenu {
                 id: deviceList
                 Component.onCompleted: {
-                    selectedDeviceIndex.connect(settings.setSelectedDeviceIndex)
+                    selectedDeviceIndex.connect(settingsMenu.setSelectedDeviceIndex)
                 }
             }
         }
@@ -57,7 +57,7 @@ ApplicationWindow {
                 id: selectedGarment
                 Component.onCompleted: {
                     stack.garmentLoaded = true
-                    settings.openPinDialog.connect(changeDevicePin)
+                    settingsMenu.openPinDialog.connect(changeDevicePin)
                 }
                 Component.onDestruction: {
                     stack.garmentLoaded = false

@@ -1,12 +1,12 @@
 /* BOARD: Arduino Nano 33 IoT */
 
 #include <ArduinoBLE.h> //version 1.1.2
-#include <FlashStorage.h> //version 0.7.1 github/cmaglie/FlashStorage
+#include <FlashStorage.h> //version 1.0.0 github/cmaglie/FlashStorage
 #include "U:/miller/Documents/MacoSpanks/deviceidentifiers.h" // must use absolute path arduino IDE
 
 // nano 33 PWM duty cycle: 490 Hz (pins 5 and 6: 980 Hz)
-#define PELVIS_PIN 9
-#define GLUTEUS_PIN 10
+#define PELVIS_PIN 10
+#define GLUTEUS_PIN 9
 #define RESET_PIN 2
 
 // defaults
@@ -17,17 +17,14 @@
 
 // BLE Basic Authentication Service
 BLEService authService(DevInfo::AUTH_SERVICE);
-
-//BLE Basic Authentication Characteristics
 BLEStringCharacteristic pinCharacteristic(DevInfo::PIN_CHARACTERISTIC, PIN_LENGTH, BLEWrite);
 BLEBoolCharacteristic authCharacteristic(DevInfo::AUTH_STATUS_CHARACTERISTIC, BLERead | BLEIndicate); //TODO test notify vs indicate if value changed internally // and is it only on write? Do I need a separate value?
+BLEDescriptor authConfigDescriptor("2902", "0100");
 String pin;
 bool authenticated = false;
 
 // BLE Heating PWM Service
 BLEService garmentService(DevInfo::GARMENT_SERVICE);
-
-// BLE Garment Characteristics
 BLEUnsignedCharCharacteristic pelvisCharacteristic(DevInfo::PELVIS_PWM_CHARACTERISTIC, BLERead | BLEWrite);
 BLEUnsignedCharCharacteristic gluteusCharacteristic(DevInfo::GLUTEUS_PWM_CHARACTERISTIC, BLERead | BLEWrite);
 BLEIntCharacteristic timerCharacteristic(DevInfo::TIMER_CHARACTERISTIC, BLERead | BLEWrite);
@@ -92,6 +89,7 @@ void setup()
   // setup BLE service
   authService.addCharacteristic(pinCharacteristic);
   authService.addCharacteristic(authCharacteristic);
+  authCharacteristic.addDescriptor(authConfigDescriptor);
   garmentService.addCharacteristic(timerCharacteristic);
   garmentService.addCharacteristic(pelvisCharacteristic);
   garmentService.addCharacteristic(gluteusCharacteristic);
@@ -110,7 +108,7 @@ void setup()
   // set callback functions for events
   BLE.setEventHandler(BLEConnected, bleConnectedHandler);
   BLE.setEventHandler(BLEDisconnected, bleDisconnectedHandler);
-  pinCharacteristic.setEventHandler(BLEWritten, pinWriteHandler); 
+  pinCharacteristic.setEventHandler(BLEWritten, pinWriteHandler);
   pelvisCharacteristic.setEventHandler(BLEWritten, pelvisWriteHandler);
   gluteusCharacteristic.setEventHandler(BLEWritten, gluteusWriteHandler);
 
@@ -127,6 +125,14 @@ void loop()
 {
   // put your main code here, to run repeatedly:
   BLE.poll();
+
+  //TODO remove - code is for notification testing purposes
+  if(BLE.connected())
+  {
+      authCharacteristic.writeValue(~authCharacteristic.value());
+      Serial.println("sending value");
+    
+  }
 }
 
 void pinWriteHandler(BLEDevice central, BLECharacteristic characteristic)
@@ -146,24 +152,25 @@ void pinWriteHandler(BLEDevice central, BLECharacteristic characteristic)
     Serial.println("New pin saved!");
     return;
   }
-  
+
   Serial.println("Authentication FAILED");
+  authCharacteristic.writeValue(false);
   disconnectFromCentralActions();
   BLE.disconnect();
 }
 
-  
+
 void timeoutWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
-  if (!isAuthenticated) return;
+  if (!isAuthenticated()) return;
   //TODO
 }
 
 
 void pelvisWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
-  if (!isAuthenticated) return;
-  analogWrite(PELVIS_PIN, TO_PWM(pelvisValue));
+  if (!isAuthenticated()) return;
+  analogWrite(PELVIS_PIN, TO_PWM(pelvisCharacteristic.value()));
   Serial.print("Pelvis Written: ");
   Serial.println(TO_PWM(pelvisCharacteristic.value()), DEC);
 }
@@ -171,7 +178,7 @@ void pelvisWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 
 void gluteusWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
-  if (!isAuthenticated) return;
+  if (!isAuthenticated()) return;
   analogWrite(GLUTEUS_PIN, TO_PWM(gluteusCharacteristic.value()));
   Serial.print("Gluteus Written: ");
   Serial.println(TO_PWM(gluteusCharacteristic.value()), DEC);
@@ -184,15 +191,19 @@ void bleConnectedHandler(BLEDevice central)
   digitalWrite(LED_BUILTIN, HIGH);
   Serial.print("Connected event, central: ");
   Serial.println(central.address());
+
+  // TODO timeout if not connected long enough
 }
 
 
 void bleDisconnectedHandler(BLEDevice central)
 {
   // central disconnected event handler
-  if (!isAuthenticated) return;
+  Serial.println("DISCONNECT HANDLER CALLED");
+  disconnectFromCentralActions();
 }
 
+// actions to take on disconnect - disconnect handler not called if garment performs disconnect
 void disconnectFromCentralActions()
 {
   authCharacteristic.writeValue(false);
@@ -217,7 +228,7 @@ void resetNonvolatileMemory()
 {
   //button debounced with cap externally
   unsigned long startCount = 0;
-  while(digitalRead(RESET_PIN) == HIGH)
+  while (digitalRead(RESET_PIN) == HIGH)
   {
     startCount++;
     // reset at ~6 seconds (rough estimate)

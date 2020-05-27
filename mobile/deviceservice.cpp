@@ -144,7 +144,8 @@ void DeviceService::serviceScanFinished()
             connect(m_authService, QOverload<QLowEnergyService::ServiceError>::of(&QLowEnergyService::error), this, [this](QLowEnergyService::ServiceError error){
                 serviceError(error, m_authService->serviceUuid().toString(QUuid::WithoutBraces));
             });
-            connect(m_authService, &QLowEnergyService::characteristicWritten, this,  &DeviceService::updateAuthCharacteristic);
+            connect(m_authService, &QLowEnergyService::characteristicChanged, this,  &DeviceService::updateAuthCharacteristic); // TODO receive notifications
+            connect(m_authService, &QLowEnergyService::characteristicRead, this,  &DeviceService::updateAuthCharacteristic);
 
             // TODO -- test how this works INDICATE VS NOTIFY -> also probably want to change to a different function so a notification can occur if device not set to same written value
             //connect(m_garmentService, &QLowEnergyService::characteristicChanged, this, &DeviceService::updateGarmentCharacteristic);
@@ -174,11 +175,13 @@ void DeviceService::serviceScanFinished()
     }
 }
 
-void DeviceService::updateAuthCharacteristic(const QLowEnergyCharacteristic &characteristic, const QByteArray &value) //TODO keep?
+void DeviceService::updateAuthCharacteristic(const QLowEnergyCharacteristic &characteristic, const QByteArray &value)
 {
-    if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::PIN_CHARACTERISTIC)))
+    qDebug() << characteristic.uuid() << QLatin1String(DevInfo::AUTH_STATUS_CHARACTERISTIC);
+    if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::AUTH_STATUS_CHARACTERISTIC)))
     {
-        setInfo(tr("Attempted pin successfully written"));
+        setInfo(tr("AUTH STATUS RECEIVED")); //TODO change to read bool
+        //characteristicWritten or characteristicChanged or characteristicRead?
     }
 }
 
@@ -270,7 +273,7 @@ void DeviceService::setAuthenticationPin(const QString &pin)
     m_authService->writeCharacteristic(
                 m_authService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::PIN_CHARACTERISTIC))),
                 pin.toLatin1(),
-                QLowEnergyService::WriteMode::WriteWithoutResponse); //TODO change to write with response
+                QLowEnergyService::WriteMode::WriteWithoutResponse); //pin is write only
 }
 
 void DeviceService::authenticate(QLowEnergyService::ServiceState state)

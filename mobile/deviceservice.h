@@ -36,6 +36,7 @@ public:
 
     int gluteusDutyCycle() const;
     bool gluteusAvailable() const;
+    void getAuthenticationState() const;
 
 public slots:
     void disconnectDevice();

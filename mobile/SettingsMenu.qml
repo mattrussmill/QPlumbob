@@ -55,7 +55,7 @@ Popup {
             id: pinButton
             enabled: deviceIndex >= 0 && deviceService.alive
             text: "*"
-            Layout.Center: true
+            Layout.fillHeight: true
             Layout.fillWidth: true
             onClicked: {
                 root.close()
