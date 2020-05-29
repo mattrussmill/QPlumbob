@@ -1,9 +1,9 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include "scanservice.h"
-#include "deviceservice.h"
-#include "usersettingsservice.h"
+#include "services/scanservice.h"
+#include "services/deviceservice.h"
+#include "services/usersettingsservice.h"
 #include <QDebug>
 
 #if defined (Q_OS_ANDROID)

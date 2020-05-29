@@ -1,14 +1,14 @@
 <RCC>
     <qresource prefix="/">
-        <file>main.qml</file>
-        <file>TitleBar.qml</file>
-        <file>ListControlBar.qml</file>
-        <file>DeviceListMenu.qml</file>
-        <file>DeviceListDelegate.qml</file>
-        <file>GarmentMenu.qml</file>
-        <file>GarmentPage.qml</file>
-        <file>GarmentSlider.qml</file>
-        <file>SettingsMenu.qml</file>
-        <file>PinDialog.qml</file>
+        <file alias="main.qml">ui/main.qml</file>
+        <file alias="PinDialog.qml">ui/popups/PinDialog.qml</file>
+        <file alias="SettingsMenu.qml">ui/popups/SettingsMenu.qml</file>
+        <file alias="DeviceListDelegate.qml">ui/pages/DeviceListDelegate.qml</file>
+        <file alias="DeviceListMenu.qml">ui/pages/DeviceListMenu.qml</file>
+        <file alias="GarmentMenu.qml">ui/pages/GarmentMenu.qml</file>
+        <file alias="GarmentPage.qml">ui/pages/GarmentPage.qml</file>
+        <file alias="GarmentSlider.qml">ui/components/GarmentSlider.qml</file>
+        <file alias="ListControlBar.qml">ui/components/ListControlBar.qml</file>
+        <file alias="TitleBar.qml">ui/components/TitleBar.qml</file>
     </qresource>
 </RCC>

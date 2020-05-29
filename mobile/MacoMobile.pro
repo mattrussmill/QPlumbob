@@ -14,19 +14,19 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 HEADERS += \
     ../deviceidentifiers.h \
-    bluetoothbase.h \
-    device.h \
-    deviceservice.h \
-    scanservice.h \
-    usersettingsservice.h
+    components/bluetoothbase.h \
+    components/device.h \
+    services/deviceservice.h \
+    services/scanservice.h \
+    services/usersettingsservice.h
 
 SOURCES += \
-        bluetoothbase.cpp \
-        device.cpp \
-        deviceservice.cpp \
         main.cpp \
-        scanservice.cpp \
-        usersettingsservice.cpp
+        components/bluetoothbase.cpp \
+        components/device.cpp \
+        services/deviceservice.cpp \
+        services/scanservice.cpp \
+        services/usersettingsservice.cpp
 
 RESOURCES += \
     qml.qrc
