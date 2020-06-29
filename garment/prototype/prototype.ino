@@ -2,7 +2,7 @@
 
 #include <ArduinoBLE.h> //version 1.1.2
 #include <FlashStorage.h> //version 1.0.0 github/cmaglie/FlashStorage
-#include "U:/miller/Documents/MacoSpanks/deviceidentifiers.h" // must use absolute path arduino IDE
+#include "C:/Users/mattr/Documents/MacoSpanks/deviceidentifiers.h" // must use absolute path arduino IDE
 
 // nano 33 PWM duty cycle: 490 Hz (pins 5 and 6: 980 Hz)
 #define PELVIS_PIN 10
@@ -18,8 +18,7 @@
 // BLE Basic Authentication Service
 BLEService authService(DevInfo::AUTH_SERVICE);
 BLEStringCharacteristic pinCharacteristic(DevInfo::PIN_CHARACTERISTIC, PIN_LENGTH, BLEWrite);
-BLEBoolCharacteristic authCharacteristic(DevInfo::AUTH_STATUS_CHARACTERISTIC, BLERead | BLEIndicate); //TODO test notify vs indicate if value changed internally // and is it only on write? Do I need a separate value?
-BLEDescriptor authConfigDescriptor("2902", "0100");
+BLEBoolCharacteristic authCharacteristic(DevInfo::AUTH_STATUS_CHARACTERISTIC, BLERead | BLENotify);
 String pin;
 bool authenticated = false;
 
@@ -89,7 +88,6 @@ void setup()
   // setup BLE service
   authService.addCharacteristic(pinCharacteristic);
   authService.addCharacteristic(authCharacteristic);
-  authCharacteristic.addDescriptor(authConfigDescriptor);
   garmentService.addCharacteristic(timerCharacteristic);
   garmentService.addCharacteristic(pelvisCharacteristic);
   garmentService.addCharacteristic(gluteusCharacteristic);
@@ -125,14 +123,6 @@ void loop()
 {
   // put your main code here, to run repeatedly:
   BLE.poll();
-
-  //TODO remove - code is for notification testing purposes
-  if(BLE.connected())
-  {
-      authCharacteristic.writeValue(~authCharacteristic.value());
-      Serial.println("sending value");
-    
-  }
 }
 
 void pinWriteHandler(BLEDevice central, BLECharacteristic characteristic)
@@ -147,6 +137,7 @@ void pinWriteHandler(BLEDevice central, BLECharacteristic characteristic)
   }
   else if (authenticated)
   {
+    // set new pin by writing the pin to non-volatile memory
     pin = pinCharacteristic.value();
     savedPin.write(pin);
     Serial.println("New pin saved!");

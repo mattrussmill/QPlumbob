@@ -67,7 +67,8 @@ private slots:
     void serviceScanFinished();
     void updateAuthCharacteristic(const QLowEnergyCharacteristic &characteristic, const QByteArray &value);
     void updateGarmentCharacteristic(const QLowEnergyCharacteristic &characteristic, const QByteArray &value);
-    void authenticate(QLowEnergyService::ServiceState state);
+    void updateAuthDescriptor(const QLowEnergyDescriptor &descriptor, const QByteArray &value);
+    void authNotifyStateChanged(QLowEnergyService::ServiceState state);
 
 private:
     void updateValue(const QLowEnergyCharacteristic &c,
@@ -78,9 +79,11 @@ private:
     QLowEnergyController *m_control = nullptr;
     QLowEnergyService *m_garmentService = nullptr;
     QLowEnergyService *m_authService= nullptr;
+    QLowEnergyDescriptor *m_authNotificationDescriptor = nullptr;
     Device *m_device = nullptr;
     bool m_foundGarmentService = false;
     bool m_foundAuthService = false;
+    bool m_authenticated = false;
 
     uint8_t m_pelvisDutyCycle = 0;
     uint8_t m_gluteusDutyCycle = 0;

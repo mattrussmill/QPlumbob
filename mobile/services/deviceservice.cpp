@@ -96,8 +96,20 @@ void DeviceService::disconnectServices()
     m_foundAuthService = false;
     if(m_authService)
     {
+        //disable notifications before disconnecting
+        if (m_authNotificationDescriptor && m_authNotificationDescriptor->isValid()
+                && m_authNotificationDescriptor->value() == QByteArray::fromHex("0100"))
+        {
+            m_authService->writeDescriptor(*m_authNotificationDescriptor, QByteArray::fromHex("0000"));
+            setInfo(tr("Authentication notificaton DISABLE service command sent on service disconnect."));
+        }
+
+        delete m_authNotificationDescriptor;
+        m_authNotificationDescriptor = nullptr;
+
         delete m_authService;
         m_authService = nullptr;
+
         serviceDisconnected = true;
     }
 
@@ -106,6 +118,7 @@ void DeviceService::disconnectServices()
     {
         delete m_garmentService;
         m_garmentService = nullptr;
+
         serviceDisconnected = true;
     }
 
@@ -140,15 +153,12 @@ void DeviceService::serviceScanFinished()
             connect(m_authService, &QLowEnergyService::stateChanged, this, [this](QLowEnergyService::ServiceState state) {
                 serviceStateChanged(state, m_authService->serviceUuid().toString(QUuid::WithoutBraces));
             });
-            connect(m_authService, &QLowEnergyService::stateChanged, this, &DeviceService::authenticate);
+            connect(m_authService, &QLowEnergyService::stateChanged, this, &DeviceService::authNotifyStateChanged);
             connect(m_authService, QOverload<QLowEnergyService::ServiceError>::of(&QLowEnergyService::error), this, [this](QLowEnergyService::ServiceError error){
                 serviceError(error, m_authService->serviceUuid().toString(QUuid::WithoutBraces));
             });
-            connect(m_authService, &QLowEnergyService::characteristicChanged, this,  &DeviceService::updateAuthCharacteristic); // TODO receive notifications
-            connect(m_authService, &QLowEnergyService::characteristicRead, this,  &DeviceService::updateAuthCharacteristic);
-
-            // TODO -- test how this works INDICATE VS NOTIFY -> also probably want to change to a different function so a notification can occur if device not set to same written value
-            //connect(m_garmentService, &QLowEnergyService::characteristicChanged, this, &DeviceService::updateGarmentCharacteristic);
+            connect(m_authService, &QLowEnergyService::characteristicChanged, this,  &DeviceService::updateAuthCharacteristic);
+            connect(m_authService, &QLowEnergyService::descriptorWritten, this, &DeviceService::updateAuthDescriptor);
 
             m_authService->discoverDetails();
             setInfo(tr("Authentication service set."));
@@ -176,13 +186,24 @@ void DeviceService::serviceScanFinished()
 }
 
 void DeviceService::updateAuthCharacteristic(const QLowEnergyCharacteristic &characteristic, const QByteArray &value)
-{
-    // TODO get this to work
+{// TODO change to AuthStatusNotifyChar to match the service discovery / changed slot for Garment
+
+    // TODO get this to work then remove line below
     qDebug() << characteristic.uuid() << QLatin1String(DevInfo::AUTH_STATUS_CHARACTERISTIC);
     if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::AUTH_STATUS_CHARACTERISTIC)))
     {
-        setInfo(tr("AUTH STATUS RECEIVED")); //TODO change to read bool
         //characteristicWritten or characteristicChanged or characteristicRead?
+        const bool receivedValue = *(reinterpret_cast<const bool *>(value.data()));
+        if (receivedValue != m_authenticated)
+        {
+            m_authenticated = receivedValue;
+            setInfo(tr("Authentication status changed"));
+            emit aliveChanged();
+        }
+        else
+        {
+            setInfo(tr("Authentication status pushed but NO change"));
+        }
     }
 }
 
@@ -190,12 +211,12 @@ void DeviceService::updateGarmentCharacteristic(const QLowEnergyCharacteristic &
 {
     if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::PELVIS_PWM_CHARACTERISTIC)))
     {
-        m_pelvisDutyCycle = *value.data();
+        m_pelvisDutyCycle = *(reinterpret_cast<const uchar*>(value.data()));
         emit pelvisDutyCycleChanged();
         setInfo(tr("Pelvis pwm value successfully written: ") + QString::number(m_pelvisDutyCycle));
     } else if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::GLUTEUS_PWM_CHARACTERISTIC)))
     {
-        m_gluteusDutyCycle = *value.data();
+        m_gluteusDutyCycle = *(reinterpret_cast<const uchar*>(value.data()));
         emit gluteusDutyCycleChanged();
         setInfo(tr("Gluteus pwm value successfully written: ") + QString::number(m_pelvisDutyCycle));
     }
@@ -257,10 +278,15 @@ QVariant DeviceService::device() const
 
 bool DeviceService::alive() const
 {
-    if(!(m_garmentService || m_authService))
-        return false;
-
-    return m_authService->state() == QLowEnergyService::ServiceDiscovered; //TODO Authenticated - need a bool
+    if (m_authenticated)
+    {
+        if (m_garmentService && m_authService)
+        {
+            return m_authService->state() == QLowEnergyService::ServiceDiscovered
+                    && m_garmentService->state() == QLowEnergyService::ServiceDiscovered;
+        }
+    }
+    return false;
 }
 
 int DeviceService::timeoutRemaining() const
@@ -271,17 +297,68 @@ int DeviceService::timeoutRemaining() const
 void DeviceService::setAuthenticationPin(const QString &pin)
 {
     setInfo(tr("Attempting to set pin to: ") + pin);
+    //TODO check characteristic valid first
     m_authService->writeCharacteristic(
                 m_authService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::PIN_CHARACTERISTIC))),
                 pin.toLatin1(),
                 QLowEnergyService::WriteMode::WriteWithoutResponse); //pin is write only
 }
 
-void DeviceService::authenticate(QLowEnergyService::ServiceState state)
+// When auth service is discovered, enable client notifications for authentication
+void DeviceService::authNotifyStateChanged(QLowEnergyService::ServiceState state)
 {
-    if (state == QLowEnergyService::ServiceDiscovered)
+    switch (state)
     {
-        setAuthenticationPin(m_device->getPin());
+        case QLowEnergyService::ServiceDiscovered:
+        {
+            const QLowEnergyCharacteristic authCharacteristic =
+                    m_authService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::AUTH_STATUS_CHARACTERISTIC)));
+            if (!authCharacteristic.isValid())
+            {
+                setError("Authentication notification service unavailable!");
+                break;
+            }
+
+            // delete client config descriptor if exists (shouldn't)
+            if (m_authNotificationDescriptor)
+                delete m_authNotificationDescriptor;
+
+            m_authNotificationDescriptor = new QLowEnergyDescriptor(
+                        authCharacteristic.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration));
+
+            // if descriptor is valid, enable notifications
+            if (m_authNotificationDescriptor->isValid()) {
+                        m_authService->writeDescriptor(*m_authNotificationDescriptor, QByteArray::fromHex("0100"));
+                        setInfo(tr("Authentication notificaton service enable command sent."));
+            }
+            else
+            {
+                setError(tr("Authentication notification could NOT be set as descriptor is invalid."));
+            }
+
+            break;
+        }
+
+        default:
+            // do nothing
+            break;
+    }
+}
+
+// confirm that the client configuration descriptor was successfully written
+void DeviceService::updateAuthDescriptor(const QLowEnergyDescriptor &descriptor, const QByteArray &value)
+{
+    if (descriptor.isValid() && descriptor == *m_authNotificationDescriptor)
+    {
+        if (value == QByteArray::fromHex("0000"))
+            setInfo(tr("Authentication notificaton DISABLE service command written successfully."));
+        else if (value == QByteArray::fromHex("0100")){
+            setInfo(tr("Authentication notificaton ENABLE service command written successfully."));
+
+            // after connecting, set pin once authentication notifications are set
+            // as the notification triggers garment ui page access
+            setAuthenticationPin(m_device->getPin());
+        }
     }
 }
 

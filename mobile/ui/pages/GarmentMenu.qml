@@ -44,6 +44,7 @@ Item {
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
         onAccepted: {
+            // dialog saves new pin (peripheral already authenticated)
             deviceService.setAuthenticationPin(pin)
         }
     }

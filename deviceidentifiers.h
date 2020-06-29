@@ -19,7 +19,9 @@ const char GLUTEUS_PWM_CHARACTERISTIC[] = "9dcba0ce-ad99-46a5-b9f0-57141f1226ee"
 
 // BLE Basic Authentication Characteristics (Version 4 UUID)
 const char PIN_CHARACTERISTIC[]         = "94ed26a1-f1d0-4730-90e6-fe360d3ab67c";   // BLE Pin Stored for Connecting to Device
-const char AUTH_STATUS_CHARACTERISTIC[] = "9fece778-2ac2-47d4-8527-3ea1fca68acc";   // BLE Status if Write Access Works
+const char AUTH_STATUS_CHARACTERISTIC[] = "9fece778-2ac2-47d4-8527-3ea1fca68acc";   // BLE Status for Authentication Updates
+const char AUTH_NOTIFY_DESCRIPTOR[]     = "2902";                                   // BLE Descriptor to enable/disable pushed authentication updates
+                                                                                        // ^ BLE standard UUID is equal to QBluetoothUuid::ClientCharacteristicConfiguration
 
 // BLE Device Information Service Characteristics
 const char DEVICE_INFO_CHAR[]       = {'\0'};                                       // TODO setup official GATT characteristics
