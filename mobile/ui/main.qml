@@ -11,10 +11,20 @@ ApplicationWindow {
         Component.onCompleted: {
             backButtonClicked.connect(stack.pop)
             backButtonClicked.connect(scanService.stopScan)
-            backButtonClicked.connect(deviceService.disconnectDevice)
             menuButtonClicked.connect(settingsMenu.open)
         }
-        Material.background: deviceService.alive ? 'blue' : 'red' //TODO remove - used for testing
+    }
+
+    //closing handler to solve android native back button causing crash
+    onClosing: {
+        if (QML_OS_ANDROID) {
+        close.accepted = false
+            if (stack.depth > 1) {
+                stack.pop()
+            } else {
+                scanService.stopScan()
+            }
+        }
     }
 
     SettingsMenu {
@@ -27,6 +37,7 @@ ApplicationWindow {
         initialItem: deviceListComponent
         anchors.fill: parent
         property bool garmentLoaded: false
+
         Component.onCompleted: {
             deviceService.onAliveChanged.connect(garmentMenuActions)
         }
@@ -35,7 +46,7 @@ ApplicationWindow {
             if(deviceService.alive && !garmentLoaded){
                 stack.push(garmentComponent)
             } else if (!deviceService.alive && garmentLoaded){
-                stack.pop()
+                stack.clear()
             }
         }
 
@@ -61,6 +72,7 @@ ApplicationWindow {
                 }
                 Component.onDestruction: {
                     stack.garmentLoaded = false
+                    deviceService.disconnectDevice()
                 }
             }
         }

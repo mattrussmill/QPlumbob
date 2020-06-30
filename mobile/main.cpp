@@ -42,6 +42,13 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("scanService", &scanService);
     engine.rootContext()->setContextProperty("deviceService", &deviceService);
 
+    // register property to mimic preprocessor decision making in QML
+    #if defined(Q_OS_ANDROID)
+    engine.rootContext()->setContextProperty("QML_OS_ANDROID", QVariant(true));
+    #elif
+    engine.rootContext()->setContextProperty("QML_OS_ANDROID", QVariant(false));
+    #endif
+
     const QUrl url = QStringLiteral("qrc:/main.qml");
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url](QObject *obj, const QUrl &objUrl) {

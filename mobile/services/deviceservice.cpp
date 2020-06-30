@@ -43,7 +43,7 @@ void DeviceService::setDevice(Device *device)
         connect(m_control, &QLowEnergyController::serviceDiscovered, this, &DeviceService::serviceDiscovered);
         connect(m_control, &QLowEnergyController::discoveryFinished, this, &DeviceService::serviceScanFinished);
         connect(m_control, static_cast<void (QLowEnergyController::*)(QLowEnergyController::Error)>(&QLowEnergyController::error), this, [this]() {
-            setError(m_control->errorString()); // TODO - does this produce the correct errors?
+            setError(m_control->errorString());
         });
         connect(m_control, &QLowEnergyController::connected, this, [this]() {
             setInfo(tr("BLE controller connected. Search services..."));
@@ -186,10 +186,7 @@ void DeviceService::serviceScanFinished()
 }
 
 void DeviceService::updateAuthCharacteristic(const QLowEnergyCharacteristic &characteristic, const QByteArray &value)
-{// TODO change to AuthStatusNotifyChar to match the service discovery / changed slot for Garment
-
-    // TODO get this to work then remove line below
-    qDebug() << characteristic.uuid() << QLatin1String(DevInfo::AUTH_STATUS_CHARACTERISTIC);
+{
     if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::AUTH_STATUS_CHARACTERISTIC)))
     {
         //characteristicWritten or characteristicChanged or characteristicRead?
