@@ -3,6 +3,7 @@ import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
 
 ApplicationWindow {
+    id: root
     visible: true
     title: qsTr('MacoMobile')
 
@@ -17,13 +18,13 @@ ApplicationWindow {
 
     //closing handler to solve android native back button causing crash
     onClosing: {
-        if (QML_OS_ANDROID) {
-        close.accepted = false
-            if (stack.depth > 1) {
-                stack.pop()
-            } else {
-                scanService.stopScan()
-            }
+        if (Qt.platform.os == "android") {
+            close.accepted = false
+                if (stack.depth > 1) {
+                    stack.pop()
+                } else {
+                    scanService.stopScan()
+                }
         }
     }
 
