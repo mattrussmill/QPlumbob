@@ -47,6 +47,11 @@ android {
 
     ANDROID_PACKAGE_SOURCE_DIR = \
             $$PWD/android
+} else:win32 {
+    message("Windows build target selected.")
+    *msvc* { # visual studio spec filter
+          QMAKE_CXXFLAGS += -MP
+      }
 }
 
 # Default rules for deployment.
