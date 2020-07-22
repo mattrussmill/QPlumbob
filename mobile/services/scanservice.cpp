@@ -64,7 +64,10 @@ void ScanService::addDevice(const QBluetoothDeviceInfo &device)
 {
     setInfo(tr("Device ") + device.name() + tr(" found."));
 
-    if (device.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
+    // checks if BLE and if advertised service is available to not add random devices to the search list
+    if (device.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration
+            && device.serviceUuids().contains(QBluetoothUuid(QLatin1String(DevInfo::AUTH_SERVICE))))
+    {
 
         if (m_userSettings)
         {
