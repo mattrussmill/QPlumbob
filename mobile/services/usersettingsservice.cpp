@@ -32,7 +32,7 @@ UserSettingsService::UserSettingsService(QObject *parent) : BluetoothBase(parent
     QFile configFile(path, this);
     if(!configFile.exists())
     {
-        setError(tr("Settings do not yet exist, using defualt settings."));
+        setInfo(tr("Settings do not yet exist, using defualt settings."));
     }
     else if (!configFile.open(QFile::ReadOnly))
     {

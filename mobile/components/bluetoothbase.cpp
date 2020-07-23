@@ -26,7 +26,9 @@ void BluetoothBase::setInfo(const QString &info)
     if (m_info != info) {
         m_info = info;
         qInfo() << info;
-        emit infoChanged();
+
+        if(!m_info.isEmpty())
+            emit infoChanged();
     }
 }
 
@@ -35,7 +37,9 @@ void BluetoothBase::setError(const QString &error)
     if (m_error != error) {
         m_error = error;
         qCritical() << error;
-        emit errorChanged();
+
+        if (!m_error.isEmpty())
+            emit errorChanged();
     }
 }
 

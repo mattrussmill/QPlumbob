@@ -33,6 +33,18 @@ ApplicationWindow {
         x: parent.width - settingsMenu.width
     }
 
+    NotifyErrorDialog {
+        id: notifyErrorDialog
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        Component.onCompleted: {
+            scanService.errorChanged.connect(() => { notifyErrorDialog.openError(scanService) })
+            deviceService.errorChanged.connect(() => { notifyErrorDialog.openError(deviceService) })
+            userSettings.errorChanged.connect(() => { notifyErrorDialog.openError(userSettings)} )
+        }
+    }
+
+
     StackView {
         id: stack
         initialItem: deviceListComponent

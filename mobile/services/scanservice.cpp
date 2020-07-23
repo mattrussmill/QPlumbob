@@ -146,9 +146,9 @@ void ScanService::stopScan()
 void ScanService::scanFinished()
 {
     if (m_devices.isEmpty())
-        setError(tr("No devices found."));
+        setInfo(tr("No devices found."));
     else
-        setInfo(tr("Scanning done."));
+        setInfo(tr("Devices discovered."));
 
     emit scanningChanged();
     emit devicesChanged();

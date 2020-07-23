@@ -10,5 +10,6 @@
         <file alias="GarmentSlider.qml">ui/components/GarmentSlider.qml</file>
         <file alias="ListControlBar.qml">ui/components/ListControlBar.qml</file>
         <file alias="TitleBar.qml">ui/components/TitleBar.qml</file>
+        <file alias="NotifyErrorDialog.qml">ui/popups/NotifyErrorDialog.qml</file>
     </qresource>
 </RCC>
