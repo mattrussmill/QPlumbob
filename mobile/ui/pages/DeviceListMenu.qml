@@ -17,7 +17,10 @@ Item {
 
     ListView {
         id: list
-        anchors.fill: parent
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.left: parent.left
+        anchors.bottom: controls.top
         model: scanService.devices
         property int selectedIndex: -1
         visible: count > 0
