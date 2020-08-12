@@ -2,11 +2,12 @@
 
 #include <ArduinoBLE.h> //version 1.1.2
 #include <FlashStorage.h> //version 1.0.0 github/cmaglie/FlashStorage
-#include "C:/Users/mattr/Documents/MacoSpanks/deviceidentifiers.h" // must use absolute path arduino IDE
+#include "C:/Users/mattr/Documents/QPlumbob/deviceidentifiers.h" // must use absolute path arduino IDE
 
 // nano 33 PWM duty cycle: 490 Hz (pins 5 and 6: 980 Hz)
-#define PELVIS_PIN 10
-#define GLUTEUS_PIN 9
+#define RED_PIN 9
+#define GREEN_PIN 10
+#define BLUE_PIN 11
 #define RESET_PIN 2
 
 // defaults
@@ -22,20 +23,19 @@ BLEBoolCharacteristic authCharacteristic(DevInfo::AUTH_STATUS_CHARACTERISTIC, BL
 String pin;
 bool authenticated = false;
 
-// BLE Heating PWM Service
-BLEService garmentService(DevInfo::GARMENT_SERVICE);
-BLEUnsignedCharCharacteristic pelvisCharacteristic(DevInfo::PELVIS_PWM_CHARACTERISTIC, BLERead | BLEWrite);
-BLEUnsignedCharCharacteristic gluteusCharacteristic(DevInfo::GLUTEUS_PWM_CHARACTERISTIC, BLERead | BLEWrite);
-BLEIntCharacteristic timerCharacteristic(DevInfo::TIMER_CHARACTERISTIC, BLERead | BLEWrite);
-uint8_t pelvisValue = 0;
-uint8_t gluteusValue = 0;
-int timerStartValue = 0;
+// BLE LED Service
+BLEService ledService(DevInfo::LED_SERVICE);
+BLEUnsignedShortCharacteristic hueCharacteristic(DevInfo::HUE_CHARACTERISTIC, BLERead | BLEWrite);
+BLEUnsignedShortCharacteristic phaseCharacteristic(DevInfo::PHASE_CHARACTERISTIC, BLERead | BLEWrite);
+BLEUnsignedShortCharacteristic valueCharacteristic(DevInfo::VALUE_CHARACTERISTIC, BLERead | BLEWrite);
+BLEUnsignedShortCharacteristic periodCharacteristic(DevInfo::PERIOD_CHARACTERISTIC, BLERead | BLEWrite);
+unsigned short hueHsvValue = 0;
+unsigned short phaseValue = 0;
+unsigned short valueHsvValue = 0;
+unsigned short periodValue = 0;
 
 // FlashStorage
 FlashStorage(savedPin, String);
-
-//TODO test
-int count = 0;
 
 void setup()
 {
@@ -47,11 +47,14 @@ void setup()
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
 
-  pinMode(PELVIS_PIN, OUTPUT);
-  analogWrite(PELVIS_PIN, 0);
+  pinMode(RED_PIN, OUTPUT);
+  analogWrite(RED_PIN, valueHsvValue);
 
-  pinMode(GLUTEUS_PIN, OUTPUT);
-  analogWrite(GLUTEUS_PIN, 0);
+  pinMode(GREEN_PIN, OUTPUT);
+  analogWrite(GREEN_PIN, valueHsvValue);
+
+  pinMode(BLUE_PIN, OUTPUT);
+  analogWrite(BLUE_PIN, valueHsvValue);
 
   pinMode(RESET_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(RESET_PIN), resetNonvolatileMemory, RISING);
@@ -66,8 +69,6 @@ void setup()
 
 
   /* setup BLE characteristics */
-  // set initial state to -1; timer disabled
-  timerCharacteristic.writeValue(-1);
 
   // set initial pin to saved pin and authenticated to false
   pin = savedPin.read();
@@ -81,24 +82,27 @@ void setup()
   }
 
   // enable two regions for this device in the off position
-  pelvisCharacteristic.writeValue(0);
-  gluteusCharacteristic.writeValue(0);
+  hueCharacteristic.writeValue(hueHsvValue);
+  phaseCharacteristic.writeValue(phaseValue);
+  valueCharacteristic.writeValue(valueHsvValue);
+  periodCharacteristic.writeValue(periodValue);
 
 
   // setup BLE service
   authService.addCharacteristic(pinCharacteristic);
   authService.addCharacteristic(authCharacteristic);
-  garmentService.addCharacteristic(timerCharacteristic);
-  garmentService.addCharacteristic(pelvisCharacteristic);
-  garmentService.addCharacteristic(gluteusCharacteristic);
+  ledService.addCharacteristic(hueCharacteristic);
+  ledService.addCharacteristic(phaseCharacteristic);
+  ledService.addCharacteristic(valueCharacteristic);
+  ledService.addCharacteristic(periodCharacteristic);
 
 
   // setup BLE module
   BLE.addService(authService);
-  BLE.addService(garmentService);
+  BLE.addService(ledService);
   BLE.setAdvertisedService(authService);        // Additional services will be discovered once connection is established.
-  BLE.setDeviceName("MacoGarment_v0.0.1");      // device name -> how does this differ from garment?
-  BLE.setLocalName("MacoGarment");              // advertising name
+  BLE.setDeviceName("Plumbob_v0.0.1");
+  BLE.setLocalName("Plumbob");                  // advertising name
   //BLE.setAdvertisingInterval(320);            // 200 * 0.625 ms
   BLE.setConnectable(true);
 
@@ -106,9 +110,10 @@ void setup()
   // set callback functions for events
   BLE.setEventHandler(BLEConnected, bleConnectedHandler);
   BLE.setEventHandler(BLEDisconnected, bleDisconnectedHandler);
-  pinCharacteristic.setEventHandler(BLEWritten, pinWriteHandler);
-  pelvisCharacteristic.setEventHandler(BLEWritten, pelvisWriteHandler);
-  gluteusCharacteristic.setEventHandler(BLEWritten, gluteusWriteHandler);
+  hueCharacteristic.setEventHandler(BLEWritten, hueWriteHandler);
+  phaseCharacteristic.setEventHandler(BLEWritten, phaseWriteHandler);
+  valueCharacteristic.setEventHandler(BLEWritten, valueWriteHandler);
+  periodCharacteristic.setEventHandler(BLEWritten, periodWriteHandler);
 
   // finish initialization
   BLE.advertise();                              // start advertising
@@ -150,31 +155,37 @@ void pinWriteHandler(BLEDevice central, BLECharacteristic characteristic)
   BLE.disconnect();
 }
 
-
-void timeoutWriteHandler(BLEDevice central, BLECharacteristic characteristic)
+void hueWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
   if (!isAuthenticated()) return;
-  //TODO
+  hueHsvValue = hueCharacteristic.value();
+  Serial.print("Hue Written: ");
+  Serial.println(hueHsvValue, DEC);
 }
 
-
-void pelvisWriteHandler(BLEDevice central, BLECharacteristic characteristic)
+void phaseWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
   if (!isAuthenticated()) return;
-  analogWrite(PELVIS_PIN, TO_PWM(pelvisCharacteristic.value()));
-  Serial.print("Pelvis Written: ");
-  Serial.println(TO_PWM(pelvisCharacteristic.value()), DEC);
+  phaseValue = hueCharacteristic.value();
+  Serial.print("Phase Written: ");
+  Serial.println(phaseValue, DEC);
 }
 
-
-void gluteusWriteHandler(BLEDevice central, BLECharacteristic characteristic)
+void valueWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
   if (!isAuthenticated()) return;
-  analogWrite(GLUTEUS_PIN, TO_PWM(gluteusCharacteristic.value()));
-  Serial.print("Gluteus Written: ");
-  Serial.println(TO_PWM(gluteusCharacteristic.value()), DEC);
+  valueHsvValue = valueCharacteristic.value();
+  Serial.print("Value Written: ");
+  Serial.println(valueHsvValue, DEC);
 }
 
+void periodWriteHandler(BLEDevice central, BLECharacteristic characteristic)
+{
+  if (!isAuthenticated()) return;
+  periodValue = hueCharacteristic.value();
+  Serial.print("Period Written: ");
+  Serial.println(periodValue, DEC);
+}
 
 void bleConnectedHandler(BLEDevice central)
 {
@@ -194,7 +205,7 @@ void bleDisconnectedHandler(BLEDevice central)
   disconnectFromCentralActions();
 }
 
-// actions to take on disconnect - disconnect handler not called if garment performs disconnect
+// actions to take on disconnect - disconnect handler not called if LED performs disconnect
 void disconnectFromCentralActions()
 {
   authCharacteristic.writeValue(false);
