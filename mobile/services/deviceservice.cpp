@@ -70,10 +70,10 @@ void DeviceService::serviceDiscovered(const QBluetoothUuid &gatt)
         setInfo(tr("Authentication service discovered."));
         m_foundAuthService = true;
     }
-    else if (gatt == QBluetoothUuid(QLatin1String(DevInfo::GARMENT_SERVICE)))
+    else if (gatt == QBluetoothUuid(QLatin1String(DevInfo::LED_SERVICE)))
     {
-        setInfo(tr("Garment service discovered."));
-        m_foundGarmentService = true;
+        setInfo(tr("LED service discovered."));
+        m_foundLedService = true;
     }
 }
 
@@ -113,11 +113,11 @@ void DeviceService::disconnectServices()
         serviceDisconnected = true;
     }
 
-    m_foundGarmentService = false;
-    if(m_garmentService)
+    m_foundLedService = false;
+    if(m_LedService)
     {
-        delete m_garmentService;
-        m_garmentService = nullptr;
+        delete m_LedService;
+        m_LedService = nullptr;
 
         serviceDisconnected = true;
     }
@@ -138,9 +138,9 @@ void DeviceService::serviceScanFinished()
         m_authService = nullptr;
     }
 
-    if (m_garmentService) {
-        delete m_garmentService;
-        m_garmentService = nullptr;
+    if (m_LedService) {
+        delete m_LedService;
+        m_LedService = nullptr;
     }
 
     // setup services if found
@@ -165,22 +165,22 @@ void DeviceService::serviceScanFinished()
         }
     }
 
-    if (m_foundGarmentService)
+    if (m_foundLedService)
     {
-        m_garmentService = m_control->createServiceObject(QBluetoothUuid(QLatin1String(DevInfo::GARMENT_SERVICE)), this);
+        m_LedService = m_control->createServiceObject(QBluetoothUuid(QLatin1String(DevInfo::LED_SERVICE)), this);
 
-        if (m_garmentService)
+        if (m_LedService)
         {
-            connect(m_garmentService, &QLowEnergyService::stateChanged, this, [this](QLowEnergyService::ServiceState state) {
-                serviceStateChanged(state, m_garmentService->serviceUuid().toString(QUuid::WithoutBraces));
+            connect(m_LedService, &QLowEnergyService::stateChanged, this, [this](QLowEnergyService::ServiceState state) {
+                serviceStateChanged(state, m_LedService->serviceUuid().toString(QUuid::WithoutBraces));
             });
-            connect(m_garmentService, QOverload<QLowEnergyService::ServiceError>::of(&QLowEnergyService::error), this, [this](QLowEnergyService::ServiceError error){
-                serviceError(error, m_garmentService->serviceUuid().toString(QUuid::WithoutBraces));
+            connect(m_LedService, QOverload<QLowEnergyService::ServiceError>::of(&QLowEnergyService::error), this, [this](QLowEnergyService::ServiceError error){
+                serviceError(error, m_LedService->serviceUuid().toString(QUuid::WithoutBraces));
             });
-            connect(m_garmentService, &QLowEnergyService::characteristicWritten, this, &DeviceService::updateGarmentCharacteristic);
+            connect(m_LedService, &QLowEnergyService::characteristicWritten, this, &DeviceService::updateLedCharacteristic);
 
-            m_garmentService->discoverDetails();
-            setInfo(tr("Garment service set."));
+            m_LedService->discoverDetails();
+            setInfo(tr("LED service set."));
         }
     }
 }
@@ -204,18 +204,31 @@ void DeviceService::updateAuthCharacteristic(const QLowEnergyCharacteristic &cha
     }
 }
 
-void DeviceService::updateGarmentCharacteristic(const QLowEnergyCharacteristic &characteristic, const QByteArray &value)
+// When LED characteristic updated in peripheral, update local value - Arduino in little endian mode, byte swapping not necessary
+void DeviceService::updateLedCharacteristic(const QLowEnergyCharacteristic &characteristic, const QByteArray &value)
 {
-    if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::PELVIS_PWM_CHARACTERISTIC)))
+    if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::HUE_CHARACTERISTIC)))
     {
-        m_pelvisDutyCycle = *(reinterpret_cast<const uchar*>(value.data()));
-        emit pelvisDutyCycleChanged();
-        setInfo(tr("Pelvis pwm value successfully written: ") + QString::number(m_pelvisDutyCycle));
-    } else if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::GLUTEUS_PWM_CHARACTERISTIC)))
+        m_hueHsvValue = *(reinterpret_cast<const uint16_t*>(value.data()));
+        emit hueHsvValueChanged();
+        setInfo(tr("Hue HSV value successfully written: ") + QString::number(m_hueHsvValue));
+
+    } else if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::PHASE_CHARACTERISTIC)))
     {
-        m_gluteusDutyCycle = *(reinterpret_cast<const uchar*>(value.data()));
-        emit gluteusDutyCycleChanged();
-        setInfo(tr("Gluteus pwm value successfully written: ") + QString::number(m_pelvisDutyCycle));
+        m_phaseValue = *(reinterpret_cast<const uint16_t*>(value.data()));
+        emit phaseValueChanged();
+        setInfo(tr("Phase value successfully written: ") + QString::number(m_phaseValue));
+
+    } else if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::VALUE_CHARACTERISTIC))) {
+        m_valueHsvValue = *(reinterpret_cast<const uint16_t*>(value.data()));
+        emit valueHsvValueChanged();
+        setInfo(tr("Value HSV value successfully written: ") + QString::number(m_valueHsvValue));
+
+    } else if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::PERIOD_CHARACTERISTIC))) {
+        m_periodValue = *(reinterpret_cast<const uint16_t*>(value.data()));
+        emit hsvValueChanged();
+        setInfo(tr("Hue HSV value successfully written: ") + QString::number(m_periodValue));
+
     }
 }
 
@@ -277,18 +290,13 @@ bool DeviceService::alive() const
 {
     if (m_authenticated)
     {
-        if (m_garmentService && m_authService)
+        if (m_LedService && m_authService)
         {
             return m_authService->state() == QLowEnergyService::ServiceDiscovered
-                    && m_garmentService->state() == QLowEnergyService::ServiceDiscovered;
+                    && m_LedService->state() == QLowEnergyService::ServiceDiscovered;
         }
     }
     return false;
-}
-
-int DeviceService::timeoutRemaining() const
-{
-    return -1; // TODO
 }
 
 void DeviceService::setAuthenticationPin(const QString &pin)
@@ -353,63 +361,95 @@ void DeviceService::updateAuthDescriptor(const QLowEnergyDescriptor &descriptor,
             setInfo(tr("Authentication notificaton ENABLE service command written successfully."));
 
             // after connecting, set pin once authentication notifications are set
-            // as the notification triggers garment ui page access
+            // as the notification triggers LED ui page access
             setAuthenticationPin(m_device->getPin());
         }
     }
 }
 
-void DeviceService::setPelvisDutyCycle(int percent)
+void DeviceService::setHueHsvValue(int value)
 {
-    setInfo(tr("Attempting to set pelvis pwm to: " + QString::number(percent).toLatin1() + "%"));
-    m_garmentService->writeCharacteristic(
-                m_garmentService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::PELVIS_PWM_CHARACTERISTIC))),
-                QByteArray(1, static_cast<uchar>(percent)),
+    uint8_t v = static_cast<uint8_t>(value); // input int from qml side
+    setInfo(tr("Attempting to set hue HSV value to: " + QString::number(v).toLatin1()));
+    m_LedService->writeCharacteristic(
+                m_LedService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::HUE_CHARACTERISTIC))),
+                QByteArray(sizeof(uint8_t), static_cast<uchar>(v)),
                 QLowEnergyService::WriteMode::WriteWithResponse);
 }
 
-int DeviceService::pelvisDutyCycle() const
+void DeviceService::setPhaseValue(int value)
 {
-    return m_pelvisDutyCycle;
-}
-
-bool DeviceService::pelvisAvailable() const
-{
-    return m_garmentService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::PELVIS_PWM_CHARACTERISTIC))).isValid();
-}
-
-void DeviceService::setGluteusDutyCycle(int percent)
-{
-    setInfo(tr("Attempting to set gluteus pwm to: " + QString::number(percent).toLatin1() + "%"));
-    m_garmentService->writeCharacteristic(
-                m_garmentService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::GLUTEUS_PWM_CHARACTERISTIC))),
-                QByteArray(1, static_cast<uchar>(percent)),
+    uint16_t v = static_cast<uint16_t>(value); // input int from qml side
+    setInfo(tr("Attempting to set phase value to: " + QString::number(v).toLatin1()));
+    m_LedService->writeCharacteristic(
+                m_LedService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::PHASE_CHARACTERISTIC))),
+                QByteArray(sizeof(uint16_t), static_cast<uchar>(v)),
                 QLowEnergyService::WriteMode::WriteWithResponse);
 }
 
-int DeviceService::gluteusDutyCycle() const
+void DeviceService::setValueHsvValue(int value)
 {
-    return m_gluteusDutyCycle;
+    uint8_t v = static_cast<uint8_t>(value); // input int from qml side
+    setInfo(tr("Attempting to set value HSV value to: " + QString::number(v).toLatin1()));
+    m_LedService->writeCharacteristic(
+                m_LedService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::VALUE_CHARACTERISTIC))),
+                QByteArray(sizeof(uint8_t), static_cast<uchar>(v)),
+                QLowEnergyService::WriteMode::WriteWithResponse);
 }
 
-bool DeviceService::gluteusAvailable() const
+void DeviceService::setPeriodValue(int value)
 {
-    return m_garmentService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::GLUTEUS_PWM_CHARACTERISTIC))).isValid();
+    uint16_t v = static_cast<uint16_t>(value); // input int from qml side
+    setInfo(tr("Attempting to set period value to: " + QString::number(v).toLatin1()));
+    m_LedService->writeCharacteristic(
+                m_LedService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::PERIOD_CHARACTERISTIC))),
+                QByteArray(sizeof(uint16_t), static_cast<uchar>(v)),
+                QLowEnergyService::WriteMode::WriteWithResponse);
 }
 
-void DeviceService::setTimeout(int minutes)
+int DeviceService::hueHsvValue() const
 {
- // TODO
+    return m_hueHsvValue;
 }
 
-void DeviceService::queryGarmentService()
+int DeviceService::phaseValue() const
+{
+    return m_periodValue;
+}
+
+int DeviceService::valueHsvValue() const
+{
+    return m_valueHsvValue;
+}
+
+int DeviceService::periodValue() const
+{
+    return m_periodValue;
+}
+
+bool DeviceService::hueHsvAvailable() const
+{
+    return m_LedService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::HUE_CHARACTERISTIC))).isValid();
+}
+
+bool DeviceService::phaseAvailable() const
+{
+    return m_LedService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::PHASE_CHARACTERISTIC))).isValid();
+}
+
+bool DeviceService::valueHsvAvailable() const
+{
+    return m_LedService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::VALUE_CHARACTERISTIC))).isValid();
+}
+
+bool DeviceService::periodAvailable() const
+{
+    return m_LedService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::PERIOD_CHARACTERISTIC))).isValid();
+}
+
+void DeviceService::queryLedService()
 {
     // TODO use this at init to get init values if disconnected and reconnected.
-}
-
-void DeviceService::queryDeviceVersionInfo()
-{
-    //TODO
 }
 
 

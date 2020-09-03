@@ -5,9 +5,9 @@
         <file alias="SettingsMenu.qml">ui/popups/SettingsMenu.qml</file>
         <file alias="DeviceListDelegate.qml">ui/pages/DeviceListDelegate.qml</file>
         <file alias="DeviceListMenu.qml">ui/pages/DeviceListMenu.qml</file>
-        <file alias="GarmentMenu.qml">ui/pages/GarmentMenu.qml</file>
-        <file alias="GarmentPage.qml">ui/pages/GarmentPage.qml</file>
-        <file alias="GarmentSlider.qml">ui/components/GarmentSlider.qml</file>
+        <file alias="LedMenu.qml">ui/pages/LedMenu.qml</file>
+        <file alias="LedPage.qml">ui/pages/LedPage.qml</file>
+        <file alias="LedSlider.qml">ui/components/LedSlider.qml</file>
         <file alias="ListControlBar.qml">ui/components/ListControlBar.qml</file>
         <file alias="TitleBar.qml">ui/components/TitleBar.qml</file>
         <file alias="NotifyErrorDialog.qml">ui/popups/NotifyErrorDialog.qml</file>

@@ -13,19 +13,35 @@ Item {
         currentIndex: 0
         anchors.fill: parent
 
-        GarmentPage {
-            id: frontRegion
-            regionName: 'Pelvis'
+        LedPage {
+            id: hueHsvValue
+            attributeName: 'Hue'
             onValueChanged: {
-                deviceService.setPelvisDutyCycle(value)
+                deviceService.setHueHsvValue(value)
             }
         }
 
-        GarmentPage {
-            id: rearRegion
-            regionName: 'Gluteus'
+        LedPage {
+            id: phaseValue
+            attributeName: 'Phase'
             onValueChanged: {
-                deviceService.setGluteusDutyCycle(value)
+                deviceService.setPhaseValue(value)
+            }
+        }
+
+        LedPage {
+            id: valueHsvValue
+            attributeName: 'Value'
+            onValueChanged: {
+                deviceService.setPhaseValue(value)
+            }
+        }
+
+        LedPage {
+            id: periodValue
+            attributeName: 'Period'
+            onValueChanged: {
+                deviceService.setPhaseValue(value)
             }
         }
 

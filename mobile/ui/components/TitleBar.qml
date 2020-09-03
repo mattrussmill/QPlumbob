@@ -19,7 +19,7 @@ ToolBar {
         }
 
         Label {
-            text: 'MacoSpanks'
+            text: 'QPlumbob'
             elide: Label.ElideRight
             horizontalAlignment: Qt.AlignHCenter
             verticalAlignment: Qt.AlignVCenter

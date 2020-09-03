@@ -49,16 +49,16 @@ ApplicationWindow {
         id: stack
         initialItem: deviceListComponent
         anchors.fill: parent
-        property bool garmentLoaded: false
+        property bool ledLoaded: false
 
         Component.onCompleted: {
-            deviceService.onAliveChanged.connect(garmentMenuActions)
+            deviceService.onAliveChanged.connect(ledMenuActions)
         }
 
-        function garmentMenuActions(){
-            if(deviceService.alive && !garmentLoaded){
-                stack.push(garmentComponent)
-            } else if (!deviceService.alive && garmentLoaded){
+        function ledMenuActions(){
+            if(deviceService.alive && !ledLoaded){
+                stack.push(ledComponent)
+            } else if (!deviceService.alive && ledLoaded){
                 stack.clear()
             }
         }
@@ -75,16 +75,16 @@ ApplicationWindow {
         }
 
         Component {
-            id: garmentComponent
+            id: ledComponent
 
-            GarmentMenu {
-                id: selectedGarment
+            LedMenu {
+                id: selectedLed
                 Component.onCompleted: {
-                    stack.garmentLoaded = true
+                    stack.ledLoaded = true
                     settingsMenu.openPinDialog.connect(changeDevicePin)
                 }
                 Component.onDestruction: {
-                    stack.garmentLoaded = false
+                    stack.ledLoaded = false
                     deviceService.disconnectDevice()
                 }
             }

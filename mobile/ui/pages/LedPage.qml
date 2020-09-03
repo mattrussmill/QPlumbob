@@ -4,14 +4,14 @@ import QtQuick.Controls 2.12
 
 Item {
     id: root
-    property string regionName
-    readonly property int value: thermostat.value
+    property string attributeName
+    readonly property int value: slider.value
 
     ColumnLayout {
         anchors.fill: parent
 
         Label {
-            text: qsTr(regionName)
+            text: qsTr(attributeName)
             horizontalAlignment: Qt.AlignHCenter
             Layout.fillWidth: true
         }
@@ -32,8 +32,8 @@ Item {
 
         }
 
-        GarmentSlider {
-            id: thermostat
+        LedSlider {
+            id: slider
             Layout.fillWidth: true
 
         }

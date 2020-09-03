@@ -1,4 +1,4 @@
-/* BOARD: Arduino Nano 33 IoT */
+/* BOARD: Arduino Nano 33 IoT - SAMD21 Cortex M0 - default in little endian mode*/
 
 #include <ArduinoBLE.h> //version 1.1.2
 #include <FlashStorage.h> //version 1.0.0 github/cmaglie/FlashStorage
@@ -25,14 +25,14 @@ bool authenticated = false;
 
 // BLE LED Service
 BLEService ledService(DevInfo::LED_SERVICE);
-BLEUnsignedShortCharacteristic hueCharacteristic(DevInfo::HUE_CHARACTERISTIC, BLERead | BLEWrite);
+BLEUnsignedCharCharacteristic hueCharacteristic(DevInfo::HUE_CHARACTERISTIC, BLERead | BLEWrite);
 BLEUnsignedShortCharacteristic phaseCharacteristic(DevInfo::PHASE_CHARACTERISTIC, BLERead | BLEWrite);
-BLEUnsignedShortCharacteristic valueCharacteristic(DevInfo::VALUE_CHARACTERISTIC, BLERead | BLEWrite);
+BLEUnsignedCharCharacteristic valueCharacteristic(DevInfo::VALUE_CHARACTERISTIC, BLERead | BLEWrite);
 BLEUnsignedShortCharacteristic periodCharacteristic(DevInfo::PERIOD_CHARACTERISTIC, BLERead | BLEWrite);
-unsigned short hueHsvValue = 0;
-unsigned short phaseValue = 0;
-unsigned short valueHsvValue = 0;
-unsigned short periodValue = 0;
+uint8_t hueHsvValue = 0;
+uint16_t phaseValue = 0;
+uint8_t valueHsvValue = 0;
+uint16_t periodValue = 0;
 
 // FlashStorage
 FlashStorage(savedPin, String);
