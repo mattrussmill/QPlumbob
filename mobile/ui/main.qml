@@ -5,7 +5,7 @@ import QtQuick.Controls.Material 2.12
 ApplicationWindow {
     id: root
     visible: true
-    title: qsTr('MacoMobile')
+    title: qsTr('QPlumbob')
 
     header: TitleBar {
         id: titleBar
@@ -52,7 +52,7 @@ ApplicationWindow {
         property bool ledLoaded: false
 
         Component.onCompleted: {
-            deviceService.onAliveChanged.connect(ledMenuActions)
+            deviceService.onAliveChanged.connect(this.ledMenuActions)
         }
 
         function ledMenuActions(){

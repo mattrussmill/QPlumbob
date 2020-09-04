@@ -33,7 +33,7 @@ Item {
             id: valueHsvValue
             attributeName: 'Value'
             onValueChanged: {
-                deviceService.setPhaseValue(value)
+                deviceService.setValueHsvValue(value)
             }
         }
 
@@ -41,7 +41,7 @@ Item {
             id: periodValue
             attributeName: 'Period'
             onValueChanged: {
-                deviceService.setPhaseValue(value)
+                deviceService.setPeriodValue(value)
             }
         }
 

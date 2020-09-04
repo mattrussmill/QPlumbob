@@ -80,6 +80,8 @@ void setup()
     pin = DEFAULT_PIN;
     savedPin.write(pin);
   }
+  pinCharacteristic.setEventHandler(BLEWritten, pinWriteHandler);
+  
 
   // enable two regions for this device in the off position
   hueCharacteristic.writeValue(hueHsvValue);
@@ -177,6 +179,10 @@ void valueWriteHandler(BLEDevice central, BLECharacteristic characteristic)
   valueHsvValue = valueCharacteristic.value();
   Serial.print("Value Written: ");
   Serial.println(valueHsvValue, DEC);
+
+  analogWrite(RED_PIN, TO_PWM(valueHsvValue));
+  analogWrite(GREEN_PIN, TO_PWM(valueHsvValue));
+  analogWrite(BLUE_PIN, TO_PWM(valueHsvValue));
 }
 
 void periodWriteHandler(BLEDevice central, BLECharacteristic characteristic)
