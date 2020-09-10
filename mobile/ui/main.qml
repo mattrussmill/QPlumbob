@@ -1,6 +1,9 @@
 import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
+import 'qrc:/ui/popups'
+import 'qrc:/ui/components'
+import 'qrc:/ui/pages'
 
 ApplicationWindow {
     id: root
@@ -57,7 +60,7 @@ ApplicationWindow {
 
         function ledMenuActions(){
             if(deviceService.alive && !ledLoaded){
-                stack.push(ledComponent)
+                stack.push(ledControllerComponent)
             } else if (!deviceService.alive && ledLoaded){
                 stack.clear()
             }
@@ -75,7 +78,7 @@ ApplicationWindow {
         }
 
         Component {
-            id: ledComponent
+            id: ledControllerComponent
 
             LedMenu {
                 id: selectedLed

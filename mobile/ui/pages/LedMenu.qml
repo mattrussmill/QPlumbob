@@ -1,5 +1,7 @@
 import QtQuick 2.12
 import QtQuick.Controls 2.12
+import 'qrc:/ui/popups'
+import 'qrc:/ui/pages'
 
 Item {
     id: root
