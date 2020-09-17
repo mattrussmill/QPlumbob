@@ -50,7 +50,7 @@ ApplicationWindow {
 
     StackView {
         id: stack
-        initialItem: deviceListComponent
+        initialItem: ledControllerComponent //TODO deviceListComponent
         anchors.fill: parent
         property bool ledLoaded: false
 

@@ -1,6 +1,7 @@
 import QtQuick 2.12
 import QtQuick.Controls 2.12
 import 'qrc:/ui/popups'
+import 'qrc:/ui/components'
 import 'qrc:/ui/pages'
 
 Item {
@@ -14,6 +15,13 @@ Item {
         id: view
         currentIndex: 0
         anchors.fill: parent
+
+        ColorSelector {
+            id: rgbSelector
+            width: width
+            height: height
+
+        }
 
         LedPage {
             id: hueHsvValue
