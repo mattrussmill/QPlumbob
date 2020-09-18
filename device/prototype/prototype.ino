@@ -26,11 +26,11 @@ bool authenticated = false;
 // BLE LED Service
 BLEService ledService(DevInfo::LED_SERVICE);
 BLEUnsignedCharCharacteristic hueCharacteristic(DevInfo::HUE_CHARACTERISTIC, BLERead | BLEWrite);
-BLEUnsignedShortCharacteristic phaseCharacteristic(DevInfo::PHASE_CHARACTERISTIC, BLERead | BLEWrite);
+BLEUnsignedCharCharacteristic saturationCharacteristic(DevInfo::SATURATION_CHARACTERISTIC, BLERead | BLEWrite);
 BLEUnsignedCharCharacteristic valueCharacteristic(DevInfo::VALUE_CHARACTERISTIC, BLERead | BLEWrite);
 BLEUnsignedShortCharacteristic periodCharacteristic(DevInfo::PERIOD_CHARACTERISTIC, BLERead | BLEWrite);
 uint8_t hueHsvValue = 0;
-uint16_t phaseValue = 0;
+uint8_t saturationValue = 0;
 uint8_t valueHsvValue = 0;
 uint16_t periodValue = 0;
 
@@ -85,7 +85,7 @@ void setup()
 
   // enable two regions for this device in the off position
   hueCharacteristic.writeValue(hueHsvValue);
-  phaseCharacteristic.writeValue(phaseValue);
+  saturationCharacteristic.writeValue(saturationValue);
   valueCharacteristic.writeValue(valueHsvValue);
   periodCharacteristic.writeValue(periodValue);
 
@@ -94,7 +94,7 @@ void setup()
   authService.addCharacteristic(pinCharacteristic);
   authService.addCharacteristic(authCharacteristic);
   ledService.addCharacteristic(hueCharacteristic);
-  ledService.addCharacteristic(phaseCharacteristic);
+  ledService.addCharacteristic(saturationCharacteristic);
   ledService.addCharacteristic(valueCharacteristic);
   ledService.addCharacteristic(periodCharacteristic);
 
@@ -113,7 +113,7 @@ void setup()
   BLE.setEventHandler(BLEConnected, bleConnectedHandler);
   BLE.setEventHandler(BLEDisconnected, bleDisconnectedHandler);
   hueCharacteristic.setEventHandler(BLEWritten, hueWriteHandler);
-  phaseCharacteristic.setEventHandler(BLEWritten, phaseWriteHandler);
+  saturationCharacteristic.setEventHandler(BLEWritten, saturationWriteHandler);
   valueCharacteristic.setEventHandler(BLEWritten, valueWriteHandler);
   periodCharacteristic.setEventHandler(BLEWritten, periodWriteHandler);
 
@@ -165,12 +165,12 @@ void hueWriteHandler(BLEDevice central, BLECharacteristic characteristic)
   Serial.println(hueHsvValue, DEC);
 }
 
-void phaseWriteHandler(BLEDevice central, BLECharacteristic characteristic)
+void saturationWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
   if (!isAuthenticated()) return;
-  phaseValue = hueCharacteristic.value();
-  Serial.print("Phase Written: ");
-  Serial.println(phaseValue, DEC);
+  saturationValue = saturationCharacteristic.value();
+  Serial.print("Saturation Written: ");
+  Serial.println(saturationValue, DEC);
 }
 
 void valueWriteHandler(BLEDevice central, BLECharacteristic characteristic)

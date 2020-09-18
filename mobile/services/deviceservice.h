@@ -18,7 +18,7 @@ class DeviceService : public BluetoothBase
     Q_PROPERTY(QVariant device READ device NOTIFY deviceChanged)
 
     Q_PROPERTY(int hueHsvValue READ hueHsvValue WRITE setHueHsvValue NOTIFY hueHsvValueChanged)
-    Q_PROPERTY(int phaseValue READ phaseValue WRITE setPhaseValue NOTIFY phaseValueChanged)
+    Q_PROPERTY(int saturationValue READ saturationValue WRITE setSaturationValue NOTIFY saturationValueChanged)
     Q_PROPERTY(int valueHsvValue READ valueHsvValue WRITE setValueHsvValue NOTIFY valueHsvValueChanged)
     Q_PROPERTY(int periodValue READ periodValue WRITE setPeriodValue NOTIFY hsvValueChanged)
 
@@ -33,11 +33,11 @@ public:
     void getAuthenticationState() const;
 
     int hueHsvValue() const;
-    int phaseValue() const;
+    int saturationValue() const;
     int valueHsvValue() const;
     int periodValue() const;
     bool hueHsvAvailable() const;
-    bool phaseAvailable() const;
+    bool saturationAvailable() const;
     bool valueHsvAvailable() const;
     bool periodAvailable() const;
 
@@ -46,7 +46,7 @@ public slots:
     void disconnectServices();
 
     void setHueHsvValue(int value);
-    void setPhaseValue(int value);
+    void setSaturationValue(int value);
     void setValueHsvValue(int value);
     void setPeriodValue(int value);
 
@@ -60,7 +60,7 @@ signals:
     void deviceChanged();
 
     void hueHsvValueChanged();
-    void phaseValueChanged();
+    void saturationValueChanged();
     void valueHsvValueChanged();
     void hsvValueChanged();
 
@@ -90,7 +90,7 @@ private:
     bool m_authenticated = false;
 
     uint8_t m_hueHsvValue = 0;
-    uint16_t m_phaseValue = 0;
+    uint8_t m_saturationValue = 0;
     uint8_t m_valueHsvValue = 0;
     uint16_t m_periodValue = 0;
 };

@@ -4,13 +4,30 @@ Item {
     id: root
 
     Rectangle {
+        id: canvasContainer
         width: root.width > root.height ? root.height : root.width
         height: width
         anchors.right: root.right
         anchors.bottom: root.bottom
         color: 'transparent'
 
+        // only works in visible part of object
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                //always in square container
+                var saturation = Math.sqrt(Math.pow(canvasContainer.width - mouse.x, 2)
+                                           + Math.pow(canvasContainer.height - mouse.y, 2))
+                                    / width * 100
+
+                console.log('radius: ' + saturation)
+                console.log('degrees: ' ) // convert from radians?
+            }
+
+        }
+
         Canvas {
+            id: canvas
             anchors.fill: parent
             onPaint: {
                 var ctx = getContext('2d')
@@ -18,7 +35,7 @@ Item {
 
                 var xArcCenter = width
                 var yArcCenter = height
-                var radius = width > height ? height : width
+                var radius = width //always in a square container
 
                 //ConicalGradient - color wheel
                 var i = 0.250 / 6
@@ -38,18 +55,17 @@ Item {
                 ctx.lineTo(xArcCenter, yArcCenter)
                 ctx.fill()
 
-                //LinearGradient - color value (LED intensity)
-                var gradientValue = ctx.createLinearGradient(xArcCenter, yArcCenter, width / 2, height / 2)
-                gradientValue.addColorStop(1.0, Qt.rgba(0.65, 0.65, 0.65, 0))
-                gradientValue.addColorStop(0.15, Qt.rgba(0.65, 0.65, 0.65, 1))
+                //RadialGradient - saturation value (LED intensity)
+                var gradientSaturation = ctx.createRadialGradient(xArcCenter, yArcCenter, 0, xArcCenter, yArcCenter, radius)
+                gradientSaturation.addColorStop(0.15, Qt.rgba(1, 1, 1, 1))
+                gradientSaturation.addColorStop(1.00, Qt.rgba(1, 1, 1, 0))
 
                 ctx.beginPath()
-                ctx.fillStyle = gradientValue
+                ctx.fillStyle = gradientSaturation
                 ctx.moveTo(xArcCenter, yArcCenter)
                 ctx.arc(xArcCenter, yArcCenter, radius, Math.PI, Math.PI * 3 / 2, false)
                 ctx.lineTo(xArcCenter, yArcCenter)
-                ctx.fill()
-
+                ctx.fill()              
             }
         }
 

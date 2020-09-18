@@ -17,7 +17,7 @@ Item {
         anchors.fill: parent
 
         ColorSelector {
-            id: rgbSelector
+            id: hueSaturationSelector
             width: width
             height: height
 
@@ -32,26 +32,10 @@ Item {
         }
 
         LedPage {
-            id: phaseValue
-            attributeName: 'Phase'
-            onValueChanged: {
-                deviceService.setPhaseValue(value)
-            }
-        }
-
-        LedPage {
             id: valueHsvValue
             attributeName: 'Value'
             onValueChanged: {
                 deviceService.setValueHsvValue(value)
-            }
-        }
-
-        LedPage {
-            id: periodValue
-            attributeName: 'Period'
-            onValueChanged: {
-                deviceService.setPeriodValue(value)
             }
         }
 

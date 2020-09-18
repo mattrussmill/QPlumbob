@@ -213,11 +213,11 @@ void DeviceService::updateLedCharacteristic(const QLowEnergyCharacteristic &char
         emit hueHsvValueChanged();
         setInfo(tr("Hue HSV value successfully written: ") + QString::number(m_hueHsvValue));
 
-    } else if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::PHASE_CHARACTERISTIC)))
+    } else if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::SATURATION_CHARACTERISTIC)))
     {
-        m_phaseValue = *(reinterpret_cast<const uint16_t*>(value.data()));
-        emit phaseValueChanged();
-        setInfo(tr("Phase value successfully written: ") + QString::number(m_phaseValue));
+        m_saturationValue = *(reinterpret_cast<const uint8_t*>(value.data()));
+        emit saturationValueChanged();
+        setInfo(tr("Saturation value successfully written: ") + QString::number(m_saturationValue));
 
     } else if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::VALUE_CHARACTERISTIC))) {
         m_valueHsvValue = *(reinterpret_cast<const uint8_t*>(value.data()));
@@ -380,15 +380,15 @@ void DeviceService::setHueHsvValue(int value)
     }
 }
 
-void DeviceService::setPhaseValue(int value)
+void DeviceService::setSaturationValue(int value)
 {
-    uint16_t v = static_cast<uint16_t>(value); // input int from qml side
-    setInfo(tr("Attempting to set phase value to: " + QString::number(v).toLatin1()));
+    uint16_t v = static_cast<uint8_t>(value); // input int from qml side
+    setInfo(tr("Attempting to set saturation value to: " + QString::number(v).toLatin1()));
     if(alive())
     {
         m_LedService->writeCharacteristic(
-                    m_LedService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::PHASE_CHARACTERISTIC))),
-                    QByteArray(sizeof(uint16_t), static_cast<uchar>(v)),
+                    m_LedService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::SATURATION_CHARACTERISTIC))),
+                    QByteArray(sizeof(uint8_t), static_cast<uchar>(v)),
                     QLowEnergyService::WriteMode::WriteWithResponse);
     }
 }
@@ -424,7 +424,7 @@ int DeviceService::hueHsvValue() const
     return m_hueHsvValue;
 }
 
-int DeviceService::phaseValue() const
+int DeviceService::saturationValue() const
 {
     return m_periodValue;
 }
@@ -444,9 +444,9 @@ bool DeviceService::hueHsvAvailable() const
     return m_LedService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::HUE_CHARACTERISTIC))).isValid();
 }
 
-bool DeviceService::phaseAvailable() const
+bool DeviceService::saturationAvailable() const
 {
-    return m_LedService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::PHASE_CHARACTERISTIC))).isValid();
+    return m_LedService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::SATURATION_CHARACTERISTIC))).isValid();
 }
 
 bool DeviceService::valueHsvAvailable() const
