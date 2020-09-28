@@ -14,14 +14,24 @@ Item {
         // only works in visible part of object
         MouseArea {
             anchors.fill: parent
+
+            //TODO test if want functionality on drag instead of clicked
             onClicked: {
-                //always in square container
+                // length between 2 points - note length and height always the same; in square container
+                // sqrt( (x2-x1)^2 + (y2-y1)^2 ) where x2 is fixed where minor arc's 90 deg corner normalized at 100
                 var saturation = Math.sqrt(Math.pow(canvasContainer.width - mouse.x, 2)
-                                           + Math.pow(canvasContainer.height - mouse.y, 2))
-                                    / width * 100
+                                  + Math.pow(canvasContainer.height - mouse.y, 2)) / width * 100
+
+                // arc tangent of (y, x) converted to degrees with the x-axis beginning at x = width
+                // angle in radians = arctan (y2 - y1, x2 - x1)
+                var angle = Math.atan2(canvasContainer.height - mouse.y, canvasContainer.width - mouse.x)
+
+                //  phase shifted accordingly and normalized at 360 degrees
+                var phaseShifted = ((angle + Math.PI / 15) * 180 / Math.PI) / 90 * 360
+                var hue = adjusted >= 360 ? adjusted - 360 : adjusted
 
                 console.log('radius: ' + saturation)
-                console.log('degrees: ' ) // convert from radians?
+                console.log('degrees: ' + hue) // convert from radians?
             }
 
         }
