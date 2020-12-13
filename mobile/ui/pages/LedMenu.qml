@@ -11,43 +11,24 @@ Item {
         userPinDialog.open()
     }
 
-    SwipeView {
-        id: view
-        currentIndex: 0
-        anchors.fill: parent
-
-        ColorSelector {
-            id: hueSaturationSelector
-            width: width
-            height: height
-
-        }
-
-        LedPage {
-            id: hueHsvValue
-            attributeName: 'Hue'
-            onValueChanged: {
-                deviceService.setHueHsvValue(value)
-            }
-        }
-
-        LedPage {
-            id: valueHsvValue
-            attributeName: 'Value'
-            onValueChanged: {
-                deviceService.setValueHsvValue(value)
-            }
-        }
-
+    Rectangle {
+        id: colorPreview
+        color: Qt.hsva(hueSaturationSelector.hue / 360.0,
+                       hueSaturationSelector.saturation / 255.0, 1, 1)
+        height: parent.height * 0.05
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
     }
 
-    PageIndicator {
-        id: indicator
-        count: view.count
-        currentIndex: view.currentIndex
-        anchors.bottom: view.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
+    ColorSelector {
+        id: hueSaturationSelector
+        height: parent.height - colorPreview.height
+        width: parent.width
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
     }
+
 
     PinDialog {
         id: userPinDialog

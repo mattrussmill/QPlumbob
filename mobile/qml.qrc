@@ -6,8 +6,6 @@
         <file>ui/pages/DeviceListDelegate.qml</file>
         <file>ui/pages/DeviceListMenu.qml</file>
         <file>ui/pages/LedMenu.qml</file>
-        <file>ui/pages/LedPage.qml</file>
-        <file>ui/components/LedSlider.qml</file>
         <file>ui/components/ListControlBar.qml</file>
         <file>ui/components/TitleBar.qml</file>
         <file>ui/popups/NotifyErrorDialog.qml</file>

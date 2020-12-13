@@ -2,6 +2,8 @@ import QtQuick 2.12
 
 Item {
     id: root
+    readonly property int hue: canvasSlice.hue
+    readonly property int saturation: canvasSlice.saturation
 
     Rectangle {
         id: canvasContainer
@@ -13,27 +15,38 @@ Item {
 
         // only works in visible part of object
         MouseArea {
+            id: canvasSlice
             anchors.fill: parent
+            property int hue
+            property int saturation
 
-            //TODO test if want functionality on drag instead of clicked
-            onClicked: {
+            function selectColorValues() {
                 // length between 2 points - note length and height always the same; in square container
-                // sqrt( (x2-x1)^2 + (y2-y1)^2 ) where x2 is fixed where minor arc's 90 deg corner normalized at 100
-                var saturation = Math.sqrt(Math.pow(canvasContainer.width - mouse.x, 2)
-                                  + Math.pow(canvasContainer.height - mouse.y, 2)) / width * 100
+                // sqrt( (x2-x1)^2 + (y2-y1)^2 ) where x2 is fixed where minor arc's 90 deg corner normalized at 255
+                var saturation = Math.sqrt(Math.pow(canvasContainer.width - mouseX, 2)
+                                  + Math.pow(canvasContainer.height - mouseY, 2)) / width * 255
 
-                // arc tangent of (y, x) converted to degrees with the x-axis beginning at x = width
-                // angle in radians = arctan (y2 - y1, x2 - x1)
-                var angle = Math.atan2(canvasContainer.height - mouse.y, canvasContainer.width - mouse.x)
+                // do nothing if out of range
+                if (saturation <= 255){
+                    canvasSlice.saturation = saturation
 
-                //  phase shifted accordingly and normalized at 360 degrees
-                var phaseShifted = ((angle + Math.PI / 15) * 180 / Math.PI) / 90 * 360
-                var hue = adjusted >= 360 ? adjusted - 360 : adjusted
+                    // arc tangent of (y, x) converted to degrees with the x-axis beginning at x = width
+                    // angle in radians = arctan (y2 - y1, x2 - x1)
+                    var angle = Math.atan2(canvasContainer.height - mouseY, canvasContainer.width - mouseX)
 
-                console.log('radius: ' + saturation)
-                console.log('degrees: ' + hue) // convert from radians?
+                    //  phase shifted accordingly and normalized at 360 degrees
+                    var phaseShifted = ((angle + Math.PI / 12) * 180 / Math.PI) / 90 * 360
+                    hue = phaseShifted >= 360 ? phaseShifted - 360 : phaseShifted
+                }
             }
 
+            onClicked: {
+                this.selectColorValues()
+            }
+
+            onPositionChanged: {
+                this.selectColorValues()
+            }
         }
 
         Canvas {
@@ -78,8 +91,5 @@ Item {
                 ctx.fill()              
             }
         }
-
-
-
     }
 }
