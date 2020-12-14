@@ -27,6 +27,14 @@ Item {
         width: parent.width
         anchors.right: parent.right
         anchors.bottom: parent.bottom
+
+        onSaturationChanged: {
+            deviceService.setSaturationValue(saturation)
+        }
+
+        onHueChanged: {
+            deviceService.setHueHsvValue(hue)
+        }
     }
 
 

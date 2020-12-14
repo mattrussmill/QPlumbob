@@ -27,12 +27,8 @@ bool authenticated = false;
 BLEService ledService(DevInfo::LED_SERVICE);
 BLEUnsignedCharCharacteristic hueCharacteristic(DevInfo::HUE_CHARACTERISTIC, BLERead | BLEWrite);
 BLEUnsignedCharCharacteristic saturationCharacteristic(DevInfo::SATURATION_CHARACTERISTIC, BLERead | BLEWrite);
-BLEUnsignedCharCharacteristic valueCharacteristic(DevInfo::VALUE_CHARACTERISTIC, BLERead | BLEWrite);
-BLEUnsignedShortCharacteristic periodCharacteristic(DevInfo::PERIOD_CHARACTERISTIC, BLERead | BLEWrite);
 uint8_t hueHsvValue = 0;
 uint8_t saturationValue = 0;
-uint8_t valueHsvValue = 0;
-uint16_t periodValue = 0;
 
 // FlashStorage
 FlashStorage(savedPin, String);
@@ -48,13 +44,13 @@ void setup()
   digitalWrite(LED_BUILTIN, LOW);
 
   pinMode(RED_PIN, OUTPUT);
-  analogWrite(RED_PIN, valueHsvValue);
+  analogWrite(RED_PIN, 255);
 
   pinMode(GREEN_PIN, OUTPUT);
-  analogWrite(GREEN_PIN, valueHsvValue);
+  analogWrite(GREEN_PIN, 255);
 
   pinMode(BLUE_PIN, OUTPUT);
-  analogWrite(BLUE_PIN, valueHsvValue);
+  analogWrite(BLUE_PIN, 255);
 
   pinMode(RESET_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(RESET_PIN), resetNonvolatileMemory, RISING);
@@ -86,17 +82,12 @@ void setup()
   // enable two regions for this device in the off position
   hueCharacteristic.writeValue(hueHsvValue);
   saturationCharacteristic.writeValue(saturationValue);
-  valueCharacteristic.writeValue(valueHsvValue);
-  periodCharacteristic.writeValue(periodValue);
-
 
   // setup BLE service
   authService.addCharacteristic(pinCharacteristic);
   authService.addCharacteristic(authCharacteristic);
   ledService.addCharacteristic(hueCharacteristic);
   ledService.addCharacteristic(saturationCharacteristic);
-  ledService.addCharacteristic(valueCharacteristic);
-  ledService.addCharacteristic(periodCharacteristic);
 
 
   // setup BLE module
@@ -114,8 +105,6 @@ void setup()
   BLE.setEventHandler(BLEDisconnected, bleDisconnectedHandler);
   hueCharacteristic.setEventHandler(BLEWritten, hueWriteHandler);
   saturationCharacteristic.setEventHandler(BLEWritten, saturationWriteHandler);
-  valueCharacteristic.setEventHandler(BLEWritten, valueWriteHandler);
-  periodCharacteristic.setEventHandler(BLEWritten, periodWriteHandler);
 
   // finish initialization
   BLE.advertise();                              // start advertising
@@ -161,6 +150,7 @@ void hueWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
   if (!isAuthenticated()) return;
   hueHsvValue = hueCharacteristic.value();
+  setLedValues();
   Serial.print("Hue Written: ");
   Serial.println(hueHsvValue, DEC);
 }
@@ -169,28 +159,17 @@ void saturationWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
   if (!isAuthenticated()) return;
   saturationValue = saturationCharacteristic.value();
+  setLedValues();
   Serial.print("Saturation Written: ");
   Serial.println(saturationValue, DEC);
 }
 
-void valueWriteHandler(BLEDevice central, BLECharacteristic characteristic)
+void setLedValues()
 {
-  if (!isAuthenticated()) return;
-  valueHsvValue = valueCharacteristic.value();
-  Serial.print("Value Written: ");
-  Serial.println(valueHsvValue, DEC);
-
-  analogWrite(RED_PIN, TO_PWM(valueHsvValue));
-  analogWrite(GREEN_PIN, TO_PWM(valueHsvValue));
-  analogWrite(BLUE_PIN, TO_PWM(valueHsvValue));
-}
-
-void periodWriteHandler(BLEDevice central, BLECharacteristic characteristic)
-{
-  if (!isAuthenticated()) return;
-  periodValue = hueCharacteristic.value();
-  Serial.print("Period Written: ");
-  Serial.println(periodValue, DEC);
+  //TODO formula to convert HSV to RGB // change to just write color, RGB in App
+  analogWrite(RED_PIN, TO_PWM(255));
+  analogWrite(GREEN_PIN, TO_PWM(255));
+  analogWrite(BLUE_PIN, TO_PWM(255));
 }
 
 void bleConnectedHandler(BLEDevice central)

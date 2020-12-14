@@ -43,14 +43,14 @@ ApplicationWindow {
         Component.onCompleted: {
             scanService.errorChanged.connect(() => { notifyErrorDialog.openError(scanService) })
             deviceService.errorChanged.connect(() => { notifyErrorDialog.openError(deviceService) })
-            userSettings.errorChanged.connect(() => { notifyErrorDialog.openError(userSettings)} )
+            userSettings.errorChanged.connect(() => { notifyErrorDialog.openError(userSettings) })
         }
     }
 
 
     StackView {
         id: stack
-        initialItem: ledControllerComponent //TODO deviceListComponent
+        initialItem: deviceListComponent //TODO should be deviceListComponent, ledControllerComponent for UI testing
         anchors.fill: parent
         property bool ledLoaded: false
 

@@ -25,11 +25,11 @@ Popup {
         anchors.fill: parent
         columns: 2
 
-        CheckBox { //TODO use tool button and replace with icon
+        CheckBox {
             id: saveCheckbox
             enabled: deviceIndex >= 0 && (saveCheckbox.checked || deviceService.alive)
-            Layout.fillHeight: true
-            Layout.fillWidth: true
+            implicitHeight: 30
+            implicitWidth: 30
             onEnabledChanged: {
                 if(!enabled)
                     checked = false
@@ -54,9 +54,8 @@ Popup {
         ToolButton { //TODO make transparent and use pushpin icon
             id: pinButton
             enabled: deviceIndex >= 0 && deviceService.alive
-            text: "*"
-            Layout.fillHeight: true
-            Layout.fillWidth: true
+            implicitHeight:  30
+            implicitWidth:  30
             onClicked: {
                 root.close()
                 openPinDialog()

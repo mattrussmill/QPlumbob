@@ -19,8 +19,6 @@ class DeviceService : public BluetoothBase
 
     Q_PROPERTY(int hueHsvValue READ hueHsvValue WRITE setHueHsvValue NOTIFY hueHsvValueChanged)
     Q_PROPERTY(int saturationValue READ saturationValue WRITE setSaturationValue NOTIFY saturationValueChanged)
-    Q_PROPERTY(int valueHsvValue READ valueHsvValue WRITE setValueHsvValue NOTIFY valueHsvValueChanged)
-    Q_PROPERTY(int periodValue READ periodValue WRITE setPeriodValue NOTIFY hsvValueChanged)
 
 public:
     DeviceService(QObject *parent = nullptr);
@@ -47,8 +45,6 @@ public slots:
 
     void setHueHsvValue(int value);
     void setSaturationValue(int value);
-    void setValueHsvValue(int value);
-    void setPeriodValue(int value);
 
     void queryLedService();
     void setAuthenticationPin(const QString &pin);
@@ -61,8 +57,6 @@ signals:
 
     void hueHsvValueChanged();
     void saturationValueChanged();
-    void valueHsvValueChanged();
-    void hsvValueChanged();
 
 private slots:
     void serviceDiscovered(const QBluetoothUuid &);
@@ -91,8 +85,6 @@ private:
 
     uint8_t m_hueHsvValue = 0;
     uint8_t m_saturationValue = 0;
-    uint8_t m_valueHsvValue = 0;
-    uint16_t m_periodValue = 0;
 };
 
 #endif // DEVICESERVICE_H

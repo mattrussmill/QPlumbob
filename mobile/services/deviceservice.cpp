@@ -218,17 +218,6 @@ void DeviceService::updateLedCharacteristic(const QLowEnergyCharacteristic &char
         m_saturationValue = *(reinterpret_cast<const uint8_t*>(value.data()));
         emit saturationValueChanged();
         setInfo(tr("Saturation value successfully written: ") + QString::number(m_saturationValue));
-
-    } else if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::VALUE_CHARACTERISTIC))) {
-        m_valueHsvValue = *(reinterpret_cast<const uint8_t*>(value.data()));
-        emit valueHsvValueChanged();
-        setInfo(tr("Value HSV value successfully written: ") + QString::number(m_valueHsvValue));
-
-    } else if (characteristic.uuid() == QBluetoothUuid(QLatin1String(DevInfo::PERIOD_CHARACTERISTIC))) {
-        m_periodValue = *(reinterpret_cast<const uint16_t*>(value.data()));
-        emit hsvValueChanged();
-        setInfo(tr("Hue HSV value successfully written: ") + QString::number(m_periodValue));
-
     }
 }
 
@@ -393,32 +382,6 @@ void DeviceService::setSaturationValue(int value)
     }
 }
 
-void DeviceService::setValueHsvValue(int value)
-{
-    uint8_t v = static_cast<uint8_t>(value); // input int from qml side
-    setInfo(tr("Attempting to set value HSV value to: " + QString::number(v).toLatin1()));
-    if(alive())
-    {
-        m_LedService->writeCharacteristic(
-                    m_LedService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::VALUE_CHARACTERISTIC))),
-                    QByteArray(sizeof(uint8_t), static_cast<uchar>(v)),
-                    QLowEnergyService::WriteMode::WriteWithResponse);
-    }
-}
-
-void DeviceService::setPeriodValue(int value)
-{
-    uint16_t v = static_cast<uint16_t>(value); // input int from qml side
-    setInfo(tr("Attempting to set period value to: " + QString::number(v).toLatin1()));
-    if(alive())
-    {
-        m_LedService->writeCharacteristic(
-                    m_LedService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::PERIOD_CHARACTERISTIC))),
-                    QByteArray(sizeof(uint16_t), static_cast<uchar>(v)),
-                    QLowEnergyService::WriteMode::WriteWithResponse);
-    }
-}
-
 int DeviceService::hueHsvValue() const
 {
     return m_hueHsvValue;
@@ -426,17 +389,7 @@ int DeviceService::hueHsvValue() const
 
 int DeviceService::saturationValue() const
 {
-    return m_periodValue;
-}
-
-int DeviceService::valueHsvValue() const
-{
-    return m_valueHsvValue;
-}
-
-int DeviceService::periodValue() const
-{
-    return m_periodValue;
+    return m_saturationValue;
 }
 
 bool DeviceService::hueHsvAvailable() const
@@ -447,16 +400,6 @@ bool DeviceService::hueHsvAvailable() const
 bool DeviceService::saturationAvailable() const
 {
     return m_LedService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::SATURATION_CHARACTERISTIC))).isValid();
-}
-
-bool DeviceService::valueHsvAvailable() const
-{
-    return m_LedService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::VALUE_CHARACTERISTIC))).isValid();
-}
-
-bool DeviceService::periodAvailable() const
-{
-    return m_LedService->characteristic(QBluetoothUuid(QLatin1String(DevInfo::PERIOD_CHARACTERISTIC))).isValid();
 }
 
 void DeviceService::queryLedService()
