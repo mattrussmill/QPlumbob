@@ -358,8 +358,8 @@ void DeviceService::updateAuthDescriptor(const QLowEnergyDescriptor &descriptor,
 
 void DeviceService::setHueHsvValue(int value)
 {
-    uint8_t v = static_cast<uint8_t>(value); // input int from qml side
-    setInfo(tr("Attempting to set hue HSV value to: " + QString::number(v).toLatin1()));
+    uint8_t v = static_cast<uint8_t>(value / 2); // input int from qml side (divide by 2 to fit in uint8)
+    setInfo(tr("Attempting to set hue HSV value to: " + QString::number(value).toLatin1()));
     if(alive())
     {
         m_LedService->writeCharacteristic(

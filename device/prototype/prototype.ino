@@ -150,7 +150,7 @@ void hueWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
   if (!isAuthenticated()) return;
   hueHsvValue = hueCharacteristic.value();
-  setLedValues();
+  setRgbValues();
   Serial.print("Hue Written: ");
   Serial.println(hueHsvValue, DEC);
 }
@@ -159,17 +159,55 @@ void saturationWriteHandler(BLEDevice central, BLECharacteristic characteristic)
 {
   if (!isAuthenticated()) return;
   saturationValue = saturationCharacteristic.value();
-  setLedValues();
+  setRgbValues();
   Serial.print("Saturation Written: ");
   Serial.println(saturationValue, DEC);
 }
 
-void setLedValues()
+void setRgbValues()
 {
-  //TODO formula to convert HSV to RGB // change to just write color, RGB in App
-  analogWrite(RED_PIN, TO_PWM(255));
-  analogWrite(GREEN_PIN, TO_PWM(255));
-  analogWrite(BLUE_PIN, TO_PWM(255));
+  // adapted from http://dystopiancode.blogspot.com/2012/06/hsv-rgb-conversion-algorithms-in-c.html
+  float c = 0.0, m = 0.0, x = 0.0, h = 0.0;
+  h = hueHsvValue * 2.0; // set to 360 / 2 = 180 to fit in uint8 -> revert from central device
+  c = saturationValue / 255.0; //v * s; v = 1.0, saturation normalized to 0.0 - 1.0
+  x = c * (1.0 - fabs(fmod(h / 60.0, 2) - 1.0));
+  m = 1.0 - c; // v - c;
+  if (h >= 0.0 && h < 60.0)
+  {
+    setRgbPwmOutput(c + m, x + m, m);
+  }
+  else if (h >= 60.0 && h < 120.0)
+  {
+    setRgbPwmOutput(x + m, c + m, m);
+  }
+  else if (h >= 120.0 && h < 180.0)
+  {
+    setRgbPwmOutput(m, c + m, x + m);
+  }
+  else if (h >= 180.0 && h < 240.0)
+  {
+    setRgbPwmOutput(m, x + m, c + m);
+  }
+  else if (h >= 240.0 && h < 300.0)
+  {
+    setRgbPwmOutput(x + m, m, c + m);
+  }
+  else if (h >= 300.0 && h < 360.0)
+  {
+    setRgbPwmOutput(c + m, m, x + m);
+  }
+  else
+  {
+    setRgbPwmOutput(m, m, m);
+  }
+}
+
+void setRgbPwmOutput(const float &red, const float &green, const float &blue)
+{
+  // r,g,b normalized at 0.0 - 1.0
+  analogWrite(RED_PIN, TO_PWM(red * 255));
+  analogWrite(GREEN_PIN, TO_PWM(green * 255));
+  analogWrite(BLUE_PIN, TO_PWM(blue * 255));
 }
 
 void bleConnectedHandler(BLEDevice central)
