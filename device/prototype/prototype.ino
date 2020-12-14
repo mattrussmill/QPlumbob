@@ -202,7 +202,7 @@ void setRgbValues()
   }
 }
 
-void setRgbPwmOutput(const float &red, const float &green, const float &blue)
+void setRgbPwmOutput(const float red, const float green, const float blue)
 {
   // r,g,b normalized at 0.0 - 1.0
   analogWrite(RED_PIN, TO_PWM(red * 255));
