@@ -1,7 +1,7 @@
 # QPlumbob Android Application and Arduino LED Controller
 
 ## ABOUT:
-The QPlumbob application and Arduino protype exists as proof of concept for learning the ins and outs of Bluetooth Low Energy (BLE) communication and QML mobile development.
+The QPlumbob application and Arduino protype exists as proof of concept for learning the ins and outs of Bluetooth Low Energy (BLE) communication and QML mobile development. This project uses a Qt/QML Android application to scan for and authenticate with an Arduino based RGB LED controller via the BLE communication protocol.
 
 ## BUILD ENVIRONMENT:
 ### Qt Environment
